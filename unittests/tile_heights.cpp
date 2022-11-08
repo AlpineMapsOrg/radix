@@ -74,6 +74,34 @@ TEST_CASE("TileHeights emplace and query")
     }
 }
 
+
+TEST_CASE("TileHeights serialisation")
+{
+    TileHeights d1;
+    d1.emplace(tile::Id { 0, { 0, 0 } }, { 0.f, 100.f });
+    d1.emplace(tile::Id { 1, { 0, 0 } }, { 10.f, 20.f });
+    d1.emplace(tile::Id { 1, { 1, 1 } }, { 20.f, 40.f });
+
+    const auto d1_bytes = d1.serialise();
+
+    const auto d2 = TileHeights::deserialise(d1_bytes);
+    {
+        auto [min, max] = d2.query(tile::Id { 0, { 0, 0 } });
+        CHECK(min == 0.f);
+        CHECK(max == 100.f);
+    }
+    {
+        auto [min, max] = d2.query(tile::Id { 1, { 0, 0 } });
+        CHECK(min == 10.f);
+        CHECK(max == 20.f);
+    }
+    {
+        auto [min, max] = d2.query(tile::Id { 1, { 1, 1 } });
+        CHECK(min == 20.f);
+        CHECK(max == 40.f);
+    }
+}
+
 TEST_CASE("TileHeights io")
 {
     const auto base_path = std::filesystem::path("./unittest_tile_heights");

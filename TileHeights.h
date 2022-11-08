@@ -18,8 +18,10 @@
 
 #pragma once
 
+#include <cstddef>
 #include <filesystem>
 #include <unordered_map>
+#include <vector>
 
 #include "hasher.h"
 #include "tile.h"
@@ -33,6 +35,8 @@ public:
     void emplace(const tile::Id& tile_id, const std::pair<float, float>& min_max);
     [[nodiscard]] ValueType query(tile::Id tile_id) const;
     void write_to(const std::filesystem::path& path) const;
-    static TileHeights read_from(const std::filesystem::path& path);
+    [[nodiscard]] static TileHeights read_from(const std::filesystem::path& path);
+    [[nodiscard]] std::vector<std::byte> serialise() const;
+    [[nodiscard]] static TileHeights deserialise(const std::vector<std::byte>& bytes);
 };
 

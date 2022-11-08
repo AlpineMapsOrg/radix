@@ -29,10 +29,7 @@ auto key(const tile::Id& tile_id)
 }
 }
 
-TileHeights::TileHeights()
-{
-
-}
+TileHeights::TileHeights() = default;
 
 void TileHeights::emplace(const tile::Id& tile_id, const std::pair<float, float>& min_max)
 {
@@ -53,29 +50,65 @@ TileHeights::ValueType TileHeights::query(tile::Id tile_id) const
     return iter->second;
 }
 
-void TileHeights::write_to(const std::filesystem::__cxx11::path& path) const
+void TileHeights::write_to(const std::filesystem::path& path) const
+{
+    std::filesystem::create_directories(path.parent_path());
+    std::ofstream file(path, std::ios::binary);
+
+    const auto bytes = serialise();
+    static_assert(sizeof(decltype(bytes.front())) == sizeof(char));
+    file.write(reinterpret_cast<const char*>(bytes.data()), bytes.size());
+}
+
+TileHeights TileHeights::read_from(const std::filesystem::path& path)
+{
+    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    std::streamsize size = file.tellg();
+
+    if (size > std::streamsize(1024 * 1024 * 200))
+        return {};
+
+    file.seekg(0, std::ios::beg);
+
+    std::vector<std::byte> buffer(size);
+    if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
+        return {};
+
+    return deserialise(buffer);
+}
+
+std::vector<std::byte> TileHeights::serialise() const
 {
     std::vector<std::pair<KeyType, ValueType>> vector_data;
     vector_data.reserve(m_data.size());
     std::copy(m_data.cbegin(), m_data.cend(), std::back_inserter(vector_data));
+    const u_int64_t size = vector_data.size();
 
-    std::filesystem::create_directories(path.parent_path());
-    std::ofstream file(path, std::ios::binary);
+    const auto data_size_in_bytes = size * sizeof(decltype(vector_data.front()));
 
-    u_int64_t size = vector_data.size();
-    file << size;
-    file.write(reinterpret_cast<char*>(vector_data.data()), sizeof(decltype(vector_data.front())) * vector_data.size());
+    std::vector<std::byte> bytes;
+    bytes.reserve(sizeof(size) + data_size_in_bytes);
+    std::copy_n(reinterpret_cast<const std::byte*>(&size), sizeof(size), std::back_inserter(bytes));
+    std::copy_n(reinterpret_cast<std::byte*>(vector_data.data()), data_size_in_bytes, std::back_inserter(bytes));
+    return bytes;
 }
 
-TileHeights TileHeights::read_from(const std::filesystem::__cxx11::path& path)
+TileHeights TileHeights::deserialise(const std::vector<std::byte>& bytes)
 {
-    using DataType = std::pair<KeyType, ValueType>;
-    std::ifstream file(path, std::ios::binary);
-    u_int64_t size = 0;
-    file >> size;
-    std::vector<DataType> vector_data;
+    u_int64_t size = -1;
+    std::copy_n(bytes.begin(), sizeof(size), reinterpret_cast<std::byte*>(&size));
+    if (size > u_int64_t(1024 * 1024 * 50))
+        return {};
+
+    std::vector<std::pair<KeyType, ValueType>> vector_data;
+    const auto data_size_in_bytes = size * sizeof(decltype(vector_data.front()));
+
+    if (bytes.size() != sizeof(size) + data_size_in_bytes)
+        return {};
+
     vector_data.resize(size);
-    file.read(reinterpret_cast<char*>(vector_data.data()), sizeof(decltype(vector_data.front())) * size);
+    std::copy_n(bytes.cbegin() + sizeof(size), data_size_in_bytes, reinterpret_cast<std::byte*>(vector_data.data()));
+
     TileHeights new_heights;
     for (const auto& entry : vector_data) {
         new_heights.m_data[entry.first] = entry.second;
