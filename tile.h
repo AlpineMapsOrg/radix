@@ -25,34 +25,61 @@
 
 namespace tile {
 /// A representation of an extent
-template <class T>
+template <unsigned n_dims, class T>
 class Aabb {
+    using Vec = glm::vec<n_dims, T>;
 public:
-    glm::tvec2<T> min = {};
-    glm::tvec2<T> max = {};
+    Vec min = {};
+    Vec max = {};
 
-    bool operator==(const Aabb<T>& other) const = default;
+    bool operator==(const Aabb<n_dims, T>& other) const = default;
 
-    T width() const { return max.x - min.x; }
-    T height() const { return max.y - min.y; }
+    [[nodiscard]] T width() const { return max.x - min.x; }
+    [[nodiscard]] T height() const { return max.y - min.y; }
 };
-using SrsBounds = Aabb<double>;
+using SrsBounds = Aabb<2, double>;
 
 template <typename T>
-bool intersect(const Aabb<T>& a, const Aabb<T>& b)
+bool intersect(const Aabb<2, T>& a, const Aabb<2, T>& b)
 {
     // http://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
     return a.min.x <= b.max.x && b.min.x <= a.max.x && a.min.y <= b.max.y && b.min.y <= a.max.y;
 }
 
 template <typename T>
-Aabb<T> intersection(const Aabb<T>& a, const Aabb<T>& b)
+bool intersect(const Aabb<3, T>& a, const Aabb<3, T>& b)
 {
-    Aabb<T> r;
+    // http://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
+    return a.min.x <= b.max.x
+        && b.min.x <= a.max.x
+        && a.min.y <= b.max.y
+        && b.min.y <= a.max.y
+        && a.min.z <= b.max.z
+        && b.min.z <= a.max.z;
+}
+
+template <typename T>
+Aabb<2, T> intersection(const Aabb<2, T>& a, const Aabb<2, T>& b)
+{
+    Aabb<2, T> r;
     r.min.x = std::max(a.min.x, b.min.x);
     r.min.y = std::max(a.min.y, b.min.y);
     r.max.x = std::min(a.max.x, b.max.x);
     r.max.y = std::min(a.max.y, b.max.y);
+    return r;
+}
+
+template <typename T>
+Aabb<3, T> intersection(const Aabb<3, T>& a, const Aabb<3, T>& b)
+{
+    Aabb<3, T> r;
+    r.min.x = std::max(a.min.x, b.min.x);
+    r.min.y = std::max(a.min.y, b.min.y);
+    r.min.z = std::max(a.min.z, b.min.z);
+
+    r.max.x = std::min(a.max.x, b.max.x);
+    r.max.y = std::min(a.max.y, b.max.y);
+    r.max.z = std::min(a.max.z, b.max.z);
     return r;
 }
 
