@@ -22,6 +22,7 @@
 #include <glm/glm.hpp>
 #include <glm/vector_relational.hpp>
 #include <tuple>
+#include "hasher.h"
 
 namespace tile {
 /// A representation of an extent
@@ -35,6 +36,10 @@ public:
     bool operator==(const Aabb<n_dims, T>& other) const = default;
 
     [[nodiscard]] glm::vec<n_dims, T> size() const { return max - min; }
+    [[nodiscard]] bool contains(const Vec& point) const
+    {
+        return glm::all(glm::lessThanEqual(min, point)) && glm::all(glm::greaterThan(max, point));
+    }
 
 };
 
@@ -137,7 +142,14 @@ struct Id {
     }
     bool operator==(const Id& other) const { return other.coords == coords && other.scheme == scheme && other.zoom_level == zoom_level; };
     bool operator<(const Id& other) const { return std::tie(zoom_level, coords.x, coords.y, scheme) < std::tie(other.zoom_level, other.coords.x, other.coords.y, other.scheme); };
+    operator std::tuple<unsigned, unsigned, unsigned, unsigned>() const
+    {
+        return std::make_tuple(zoom_level, coords.x, coords.y, unsigned(scheme));
+    }
+
+    using Hasher = typename hasher::for_tuple<unsigned, unsigned, unsigned, unsigned>;
 };
+
 
 struct Descriptor {
     // used to generate file name
@@ -145,12 +157,13 @@ struct Descriptor {
 
     // srsBounds are the bounds of the tile including the border pixel.
     SrsBounds srsBounds;
-    int srs_epsg;
+    int srs_epsg = -1;
 
     // some tiling schemes require a border (e.g. cesium heightmap https://github.com/CesiumGS/cesium/wiki/heightmap-1%2E0).
     // grid bounds does not contain that border (e.g. 64 width)
     // tile bounds contains that border (e.g. 65 width)
-    unsigned gridSize;
-    unsigned tileSize;
+    unsigned gridSize = -1;
+    unsigned tileSize = -1;
 };
+
 }

@@ -182,3 +182,12 @@ TEST_CASE("tile::Bounds intersect")
     CHECK(!intersect(tile::SrsBounds{{0, 0}, {1, 1}}, tile::SrsBounds{{0.5, 1.5}, {0.7, 1.8}}));
     CHECK(!intersect(tile::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}, tile::Aabb<3, double>{{-0.5, -0.5, 1.5}, {0.5, 2.0, 3.0}}));
 }
+
+TEST_CASE("tile::Id::contains")
+{
+    CHECK(tile::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}.contains({0.5, 0.5, 0.5}));
+    CHECK(tile::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}.contains({0.0, 0.0, 0.0}));
+    CHECK(!tile::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}.contains({1.0, 1.0, 1.0}));
+    CHECK(!tile::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}.contains({1.5, 0.5, 0.5}));
+
+}
