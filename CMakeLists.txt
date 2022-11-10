@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.21)
 
 project(sherpa)
 
 option(SHERPA_UNITTESTS "include unit test targets in the buildsystem" ON)
-option(SHERPA_ENABLE_ADDRESS_SANITIZER "compiles atb with address sanitizer enabled (only debug, works only on g++ and clang)" ON)
+option(SHERPA_ENABLE_ADDRESS_SANITIZER "compiles atb with address sanitizer enabled (only debug, works only on g++ and clang)" OFF)
 option(SHERPA_ENABLE_ASSERTS "enable asserts (do not define NDEBUG)" ON)
 option(SHERPA_USE_LLVM_LINKER "use lld (llvm) for linking. it's parallel and much faster, but not installed by default. if it's not installed, you'll get errors, that openmp or other stuff is not installed (hard to track down)" OFF)
 
@@ -41,9 +41,11 @@ endif()
 
 add_library(sherpa STATIC ${SHERPA_SOURCES})
 
-target_include_directories(sherpa SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/libs/glm)
+target_include_directories(sherpa
+    PRIVATE .
+    SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/libs/glm
+)
 target_compile_definitions(sherpa PUBLIC GLM_FORCE_XYZW_ONLY)
-target_include_directories(sherpa PRIVATE .)
 if (SHERPA_ENABLE_ASSERTS)
     target_compile_options(sherpa PUBLIC "-U NDEBUG")
     target_compile_options(sherpa PUBLIC "-DTNTN_ASSERT_ACTIVE")
@@ -52,4 +54,7 @@ endif()
 if (SHERPA_UNITTESTS AND NOT EMSCRIPTEN)
     add_executable(sherpa_unittests ${SHERPA_UNITTESTS_SOURCES})
     target_link_libraries(sherpa_unittests PUBLIC sherpa Catch2::Catch2)
+    target_include_directories(sherpa_unittests
+        PRIVATE .
+    )
 endif()
