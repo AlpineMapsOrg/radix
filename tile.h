@@ -22,86 +22,28 @@
 #include <glm/glm.hpp>
 #include <glm/vector_relational.hpp>
 #include <tuple>
+
+#include "geometry.h"
 #include "hasher.h"
 
 namespace tile {
-/// A representation of an extent
-template <glm::length_t n_dims, class T>
-class Aabb {
-    using Vec = glm::vec<n_dims, T>;
-public:
-    Vec min = {};
-    Vec max = {};
-
-    bool operator==(const Aabb<n_dims, T>& other) const = default;
-
-    [[nodiscard]] glm::vec<n_dims, T> size() const { return max - min; }
-    [[nodiscard]] bool contains(const Vec& point) const
-    {
-        return glm::all(glm::lessThanEqual(min, point)) && glm::all(glm::greaterThan(max, point));
-    }
-
-};
 
 template <class T>
-class Aabb2 : public Aabb<2, T> {
-    using Base = Aabb<2, T>;
+class Aabb2 : public geometry::Aabb<2, T> {
+    using Base = geometry::Aabb<2, T>;
     using Vec = glm::vec<2, T>;
 public:
-    using Aabb<2, T>::min;
-    using Aabb<2, T>::max;
+    using Base::min;
+    using Base::max;
     Aabb2() = default;
     Aabb2(const Vec& min, const Vec& max) : Base{min, max} {}
+    Aabb2(const geometry::Aabb<3, T>& other) : Base{Vec(other.min), Vec(other.max)} {}
 
     [[nodiscard]] T width() const { return max.x - min.x; }
     [[nodiscard]] T height() const { return max.y - min.y; }
 };
 using SrsBounds = Aabb2<double>;
-using SrsAndHeightBounds = Aabb<3, double>;
-
-template <typename T>
-bool intersect(const Aabb<2, T>& a, const Aabb<2, T>& b)
-{
-    // http://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
-    return a.min.x <= b.max.x && b.min.x <= a.max.x && a.min.y <= b.max.y && b.min.y <= a.max.y;
-}
-
-template <typename T>
-bool intersect(const Aabb<3, T>& a, const Aabb<3, T>& b)
-{
-    // http://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
-    return a.min.x <= b.max.x
-        && b.min.x <= a.max.x
-        && a.min.y <= b.max.y
-        && b.min.y <= a.max.y
-        && a.min.z <= b.max.z
-        && b.min.z <= a.max.z;
-}
-
-template <typename T>
-Aabb<2, T> intersection(const Aabb<2, T>& a, const Aabb<2, T>& b)
-{
-    Aabb<2, T> r;
-    r.min.x = std::max(a.min.x, b.min.x);
-    r.min.y = std::max(a.min.y, b.min.y);
-    r.max.x = std::min(a.max.x, b.max.x);
-    r.max.y = std::min(a.max.y, b.max.y);
-    return r;
-}
-
-template <typename T>
-Aabb<3, T> intersection(const Aabb<3, T>& a, const Aabb<3, T>& b)
-{
-    Aabb<3, T> r;
-    r.min.x = std::max(a.min.x, b.min.x);
-    r.min.y = std::max(a.min.y, b.min.y);
-    r.min.z = std::max(a.min.z, b.min.z);
-
-    r.max.x = std::min(a.max.x, b.max.x);
-    r.max.y = std::min(a.max.y, b.max.y);
-    r.max.z = std::min(a.max.z, b.max.z);
-    return r;
-}
+using SrsAndHeightBounds = geometry::Aabb<3, double>;
 
 enum class Border {
     Yes = 1,

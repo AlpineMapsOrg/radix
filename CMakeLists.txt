@@ -14,12 +14,14 @@ if (SHERPA_UNITTESTS)
 endif()
 
 set(SHERPA_SOURCES
+    geometry.h
     hasher.h
     tile.h
     TileHeights.h TileHeights.cpp
 )
 
 set(SHERPA_UNITTESTS_SOURCES
+    unittests/geometry.cpp
     unittests/main.cpp
     unittests/tile.cpp
     unittests/tile_heights.cpp
