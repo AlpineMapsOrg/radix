@@ -37,6 +37,29 @@ public:
     void write_to(const std::filesystem::path& path) const;
     [[nodiscard]] static TileHeights read_from(const std::filesystem::path& path);
     [[nodiscard]] std::vector<std::byte> serialise() const;
-    [[nodiscard]] static TileHeights deserialise(const std::vector<std::byte>& bytes);
+
+    template <typename VectorOfBytes>
+    [[nodiscard]] static TileHeights deserialise(const VectorOfBytes& bytes)
+    {
+        uint64_t size = -1;
+        std::copy_n(reinterpret_cast<const std::byte*>(bytes.data()), sizeof(size), reinterpret_cast<std::byte*>(&size));
+        if (size > uint64_t(1024 * 1024 * 50))
+            return {};
+
+        std::vector<std::pair<KeyType, ValueType>> vector_data;
+        const auto data_size_in_bytes = size * sizeof(decltype(vector_data.front()));
+
+        if (bytes.size() != sizeof(size) + data_size_in_bytes)
+            return {};
+
+        vector_data.resize(size);
+        std::copy_n(reinterpret_cast<const std::byte*>(bytes.data()) + sizeof(size), data_size_in_bytes, reinterpret_cast<std::byte*>(vector_data.data()));
+
+        TileHeights new_heights;
+        for (const auto& entry : vector_data) {
+            new_heights.m_data[entry.first] = entry.second;
+        }
+        return new_heights;
+    }
 };
 

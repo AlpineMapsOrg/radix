@@ -82,7 +82,7 @@ std::vector<std::byte> TileHeights::serialise() const
     std::vector<std::pair<KeyType, ValueType>> vector_data;
     vector_data.reserve(m_data.size());
     std::copy(m_data.cbegin(), m_data.cend(), std::back_inserter(vector_data));
-    const u_int64_t size = vector_data.size();
+    const uint64_t size = vector_data.size();
 
     const auto data_size_in_bytes = size * sizeof(decltype(vector_data.front()));
 
@@ -91,27 +91,4 @@ std::vector<std::byte> TileHeights::serialise() const
     std::copy_n(reinterpret_cast<const std::byte*>(&size), sizeof(size), std::back_inserter(bytes));
     std::copy_n(reinterpret_cast<std::byte*>(vector_data.data()), data_size_in_bytes, std::back_inserter(bytes));
     return bytes;
-}
-
-TileHeights TileHeights::deserialise(const std::vector<std::byte>& bytes)
-{
-    u_int64_t size = -1;
-    std::copy_n(bytes.begin(), sizeof(size), reinterpret_cast<std::byte*>(&size));
-    if (size > u_int64_t(1024 * 1024 * 50))
-        return {};
-
-    std::vector<std::pair<KeyType, ValueType>> vector_data;
-    const auto data_size_in_bytes = size * sizeof(decltype(vector_data.front()));
-
-    if (bytes.size() != sizeof(size) + data_size_in_bytes)
-        return {};
-
-    vector_data.resize(size);
-    std::copy_n(bytes.cbegin() + sizeof(size), data_size_in_bytes, reinterpret_cast<std::byte*>(vector_data.data()));
-
-    TileHeights new_heights;
-    for (const auto& entry : vector_data) {
-        new_heights.m_data[entry.first] = entry.second;
-    }
-    return new_heights;
 }

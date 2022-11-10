@@ -9,7 +9,7 @@ option(SHERPA_USE_LLVM_LINKER "use lld (llvm) for linking. it's parallel and muc
 
 set(CMAKE_CXX_STANDARD 20)
 
-if (SHERPA_UNITTESTS)
+if (SHERPA_UNITTESTS AND NOT EMSCRIPTEN)
     find_package(Catch2 REQUIRED)
 endif()
 
@@ -40,14 +40,16 @@ endif()
 
 
 add_library(sherpa STATIC ${SHERPA_SOURCES})
+
+target_include_directories(sherpa SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/libs/glm)
 target_compile_definitions(sherpa PUBLIC GLM_FORCE_XYZW_ONLY)
-target_include_directories(sherpa PUBLIC .)
+target_include_directories(sherpa PRIVATE .)
 if (SHERPA_ENABLE_ASSERTS)
     target_compile_options(sherpa PUBLIC "-U NDEBUG")
     target_compile_options(sherpa PUBLIC "-DTNTN_ASSERT_ACTIVE")
 endif()
 
-if (SHERPA_UNITTESTS)
+if (SHERPA_UNITTESTS AND NOT EMSCRIPTEN)
     add_executable(sherpa_unittests ${SHERPA_UNITTESTS_SOURCES})
     target_link_libraries(sherpa_unittests PUBLIC sherpa Catch2::Catch2)
 endif()
