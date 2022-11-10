@@ -46,7 +46,8 @@ public:
         if (size > uint64_t(1024 * 1024 * 50))
             return {};
 
-        std::vector<std::pair<KeyType, ValueType>> vector_data;
+        static_assert(sizeof(std::pair<KeyType, ValueType>) == 5 * 4);
+        std::vector<std::pair<glm::uvec3, ValueType>> vector_data;
         const auto data_size_in_bytes = size * sizeof(decltype(vector_data.front()));
 
         if (bytes.size() != sizeof(size) + data_size_in_bytes)
@@ -57,7 +58,7 @@ public:
 
         TileHeights new_heights;
         for (const auto& entry : vector_data) {
-            new_heights.m_data[entry.first] = entry.second;
+            new_heights.m_data[std::make_tuple(entry.first.x, entry.first.y, entry.first.z)] = entry.second;
         }
         return new_heights;
     }

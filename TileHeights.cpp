@@ -79,9 +79,12 @@ TileHeights TileHeights::read_from(const std::filesystem::path& path)
 
 std::vector<std::byte> TileHeights::serialise() const
 {
-    std::vector<std::pair<KeyType, ValueType>> vector_data;
+    // vector_data must have a defined element order. tuple doesn't. there is a difference between emscripten and g++
+    std::vector<std::pair<glm::uvec3, ValueType>> vector_data;
     vector_data.reserve(m_data.size());
-    std::copy(m_data.cbegin(), m_data.cend(), std::back_inserter(vector_data));
+    for (const auto& d : m_data) {
+        vector_data.emplace_back(glm::uvec3 { std::get<0>(d.first), std::get<1>(d.first), std::get<2>(d.first) }, d.second);
+    }
     const uint64_t size = vector_data.size();
 
     const auto data_size_in_bytes = size * sizeof(decltype(vector_data.front()));
