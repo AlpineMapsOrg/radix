@@ -52,7 +52,7 @@ public:
     [[nodiscard]] T height() const { return max.y - min.y; }
 };
 using SrsBounds = Aabb2<double>;
-using SrsBoundsAndHeight = Aabb<3, double>;
+using SrsAndHeightBounds = Aabb<3, double>;
 
 template <typename T>
 bool intersect(const Aabb<2, T>& a, const Aabb<2, T>& b)
