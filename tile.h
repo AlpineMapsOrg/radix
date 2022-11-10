@@ -25,7 +25,7 @@
 
 namespace tile {
 /// A representation of an extent
-template <unsigned n_dims, class T>
+template <glm::length_t n_dims, class T>
 class Aabb {
     using Vec = glm::vec<n_dims, T>;
 public:
@@ -34,10 +34,25 @@ public:
 
     bool operator==(const Aabb<n_dims, T>& other) const = default;
 
+    [[nodiscard]] glm::vec<n_dims, T> size() const { return max - min; }
+
+};
+
+template <class T>
+class Aabb2 : public Aabb<2, T> {
+    using Base = Aabb<2, T>;
+    using Vec = glm::vec<2, T>;
+public:
+    using Aabb<2, T>::min;
+    using Aabb<2, T>::max;
+    Aabb2() = default;
+    Aabb2(const Vec& min, const Vec& max) : Base{min, max} {}
+
     [[nodiscard]] T width() const { return max.x - min.x; }
     [[nodiscard]] T height() const { return max.y - min.y; }
 };
-using SrsBounds = Aabb<2, double>;
+using SrsBounds = Aabb2<double>;
+using SrsBoundsAndHeight = Aabb<3, double>;
 
 template <typename T>
 bool intersect(const Aabb<2, T>& a, const Aabb<2, T>& b)
