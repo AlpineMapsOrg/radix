@@ -39,6 +39,7 @@ public:
     {
         return glm::all(glm::lessThanEqual(min, point)) && glm::all(glm::greaterThan(max, point));
     }
+    [[nodiscard]] glm::vec<n_dims, T> centre() const { return min + size() * T(0.5); }
 };
 using Aabb2d = Aabb<2, double>;
 using Aabb2f = Aabb<2, float>;

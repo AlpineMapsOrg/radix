@@ -77,6 +77,13 @@ TEST_CASE("geometry")
         CHECK(!geometry::inside(glm::dvec3(5, 15, 5), box));
         CHECK(equals(geometry::centroid(box), { 5.0, 6.0, 7.0 }));
     }
+    SECTION("aabb size")
+    {
+        CHECK(geometry::Aabb3d { { -0.5, -0.5, -0.5 }, { 0.5, 0.5, 0.5 } }.size().x == Approx(1.0));
+        CHECK(geometry::Aabb3d { { -0.5, -0.5, -0.5 }, { 0.5, 0.5, 0.5 } }.size().y == Approx(1.0));
+        CHECK(geometry::Aabb3d { { -0.5, -0.5, -0.5 }, { 0.5, 0.5, 0.5 } }.size().z == Approx(1.0));
+        CHECK(glm::length(geometry::Aabb3d { { -0.5, -0.5, -0.5 }, { 0.5, 0.5, 0.5 } }.size()) == Approx(std::sqrt(3)));
+    }
 
     SECTION("triangle normal")
     {
