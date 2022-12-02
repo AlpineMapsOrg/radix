@@ -44,7 +44,7 @@ TileHeights::ValueType TileHeights::query(tile::Id tile_id) const
         iter = m_data.find(key(tile_id));
         if (tile_id.zoom_level == unsigned(-1)) {
             assert(false);
-            return { 0, 9000 }; // mount everest is a bit under 9km, but there should always be a root tile.
+            return { 0.f, 9000.0f }; // mount everest is a bit under 9km, but there should always be a root tile.
         }
     }
     return iter->second;
