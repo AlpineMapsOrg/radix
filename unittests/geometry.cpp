@@ -39,7 +39,7 @@ bool test_contains(const geometry::Triangle<3, double>& triangle, const glm::dve
 
 
 
-TEST_CASE("geometry::Aabb intersect")
+TEST_CASE("sherpa/geometry::Aabb intersect")
 {
     CHECK(intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{0, 0}, {1, 1}}));
     CHECK(intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-1, -1}, {2, 2}}));
@@ -59,7 +59,7 @@ TEST_CASE("geometry::Aabb intersect")
     CHECK(!intersect(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}, geometry::Aabb<3, double>{{-0.5, -0.5, 1.5}, {0.5, 2.0, 3.0}}));
 }
 
-TEST_CASE("tile::Id::contains")
+TEST_CASE("sherpa/geometry::Aabb::contains")
 {
     CHECK(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}.contains({0.5, 0.5, 0.5}));
     CHECK(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}.contains({0.0, 0.0, 0.0}));
@@ -68,7 +68,7 @@ TEST_CASE("tile::Id::contains")
 }
 
 
-TEST_CASE("geometry")
+TEST_CASE("sherpa/geometry")
 {
     SECTION("aabb")
     {

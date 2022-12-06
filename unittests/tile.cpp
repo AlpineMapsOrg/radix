@@ -20,7 +20,7 @@
 
 #include "tile.h"
 
-TEST_CASE("tile::Id scheme conversion")
+TEST_CASE("sherpa/tile::Id scheme conversion")
 {
     SECTION("tms -> slippy map")
     {
@@ -57,7 +57,7 @@ TEST_CASE("tile::Id scheme conversion")
 }
 
 
-TEST_CASE("tile::Id parent")
+TEST_CASE("sherpa/tile::Id parent")
 {
     CHECK(tile::Id { 1, { 0, 1 } }.parent() == tile::Id { 0, { 0, 0 } });
     CHECK(tile::Id { 2, { 2, 1 } }.parent() == tile::Id { 1, { 1, 0 } });
@@ -65,7 +65,7 @@ TEST_CASE("tile::Id parent")
     CHECK(tile::Id { 2, { 3, 3 } }.parent() == tile::Id { 1, { 1, 1 } });
 }
 
-TEST_CASE("tile::Id, children") {
+TEST_CASE("sherpa/tile::Id, children") {
     SECTION("mercator tms (y point up)")
     {
         {

@@ -21,7 +21,7 @@
 
 #include "TileHeights.h"
 
-TEST_CASE("TileHeights emplace and query")
+TEST_CASE("sherpa/TileHeights emplace and query")
 {
     TileHeights d;
     SECTION("basic in and out")
@@ -75,7 +75,7 @@ TEST_CASE("TileHeights emplace and query")
 }
 
 
-TEST_CASE("TileHeights serialisation")
+TEST_CASE("sherpa/TileHeights serialisation")
 {
     TileHeights d1;
     d1.emplace(tile::Id { 0, { 0, 0 } }, { 0.f, 100.f });
@@ -102,7 +102,7 @@ TEST_CASE("TileHeights serialisation")
     }
 }
 
-TEST_CASE("TileHeights io")
+TEST_CASE("sherpa/TileHeights io")
 {
     const auto base_path = std::filesystem::path("./unittest_tile_heights");
     constexpr auto file_name = "height_data.atb";
