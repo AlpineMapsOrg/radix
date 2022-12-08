@@ -188,6 +188,7 @@ template <typename T>
 std::vector<Triangle<3, T>> clip(const std::vector<Triangle<3, T>>& triangles, const Plane<T>& plane)
 {
     std::vector<Triangle<3, T>> ret;
+    ret.reserve(triangles.size() * 2);
     for (const auto& tri : triangles) {
         const auto clipped = clip(tri, plane);
         std::copy(clipped.begin(), clipped.end(), std::back_inserter(ret));
