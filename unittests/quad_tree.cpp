@@ -1,6 +1,6 @@
 /*****************************************************************************
- * Alpine Terrain Builder
- * Copyright (C) 2022 alpinemaps.org
+ * Alpine Sherpa
+ * Copyright (C) 2022 Adam Celarek <last name at cg dot tuwien dot ac dot at>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,11 +40,11 @@ struct DeletionChecker {
 unsigned DeletionChecker::counter = 0;
 }
 
-TEST_CASE("nucleus/utils/QuadTree")
+TEST_CASE("sherpa/quad_tree")
 {
     SECTION("construction and basics")
     {
-        QuadTreeNode<unsigned> root(42);
+        quad_tree::Node<unsigned> root(42);
         CHECK(root.hasChildren() == false);
         CHECK(root.data() == 42);
         root.data() = 43;
@@ -52,7 +52,7 @@ TEST_CASE("nucleus/utils/QuadTree")
     }
     SECTION("adding children")
     {
-        QuadTreeNode<unsigned> root(42);
+        quad_tree::Node<unsigned> root(42);
         root.addChildren({ 1, 2, 3, 4 });
         REQUIRE(root.hasChildren() == true);
         CHECK(root.data() == 42);
@@ -73,7 +73,7 @@ TEST_CASE("nucleus/utils/QuadTree")
     }
     SECTION("adding and removing children")
     {
-        QuadTreeNode<DeletionChecker> root({});
+        quad_tree::Node<DeletionChecker> root({});
         CHECK(DeletionChecker::counter == 1);
         root.addChildren({});
         CHECK(DeletionChecker::counter == 5);
@@ -85,7 +85,7 @@ TEST_CASE("nucleus/utils/QuadTree")
     }
     SECTION("visit all nodes")
     {
-        QuadTreeNode<unsigned> root(0);
+        quad_tree::Node<unsigned> root(0);
         root.addChildren({ 1, 2, 3, 4 });
         root[0].addChildren({ 5, 6, 7, 8 });
         root[0][2].addChildren({ 9, 10, 11, 12 });
@@ -97,7 +97,7 @@ TEST_CASE("nucleus/utils/QuadTree")
     }
     SECTION("visit inner nodes")
     {
-        QuadTreeNode<unsigned> root(0);
+        quad_tree::Node<unsigned> root(0);
         root.addChildren({ 1, 2, 3, 4 });
         root[0].addChildren({ 5, 6, 7, 8 });
         root[0][2].addChildren({ 9, 10, 11, 12 });
@@ -111,7 +111,7 @@ TEST_CASE("nucleus/utils/QuadTree")
     }
     SECTION("visit leaves")
     {
-        QuadTreeNode<unsigned> root(0);
+        quad_tree::Node<unsigned> root(0);
         root.addChildren({ 1, 2, 3, 4 });
         root[0].addChildren({ 5, 6, 7, 8 });
         root[0][2].addChildren({ 9, 10, 11, 12 });
@@ -125,7 +125,7 @@ TEST_CASE("nucleus/utils/QuadTree")
     }
     SECTION("collect subtrees with leaf condition 1")
     {
-        QuadTreeNode<int> root(-101);
+        quad_tree::Node<int> root(-101);
         const auto collection = quad_tree::collectSubtreesWithLeafCondition(&root, [&](auto v) {
             CHECK(std::abs(v) > 100); // checks that only leaves are visited
             return v < 0;
@@ -135,7 +135,7 @@ TEST_CASE("nucleus/utils/QuadTree")
     }
     SECTION("collect subtrees with leaf condition 2")
     {
-        QuadTreeNode<int> root(0);
+        quad_tree::Node<int> root(0);
         root.addChildren({ 1, 2, 3, 400 });
         root[0].addChildren({ 500, 600, 7, 800 });
         root[0][2].addChildren({ 900, 101, 110, 120 });
@@ -153,7 +153,7 @@ TEST_CASE("nucleus/utils/QuadTree")
     }
     SECTION("refine can start from root")
     {
-        QuadTreeNode<int> root(1);
+        quad_tree::Node<int> root(1);
         const auto refine_predicate = [](const auto& node_value) {
             return node_value > 0;
         };
@@ -170,7 +170,7 @@ TEST_CASE("nucleus/utils/QuadTree")
 
     SECTION("refine 2 and reduce")
     {
-        QuadTreeNode<int> root(0);
+        quad_tree::Node<int> root(0);
         root.addChildren({ 42, 1, 6, -1 });
         root[0].addChildren({ -43, -44, -45, 46 });
         root[0][0].addChildren({ -1, -2, -3, -4 });
@@ -284,7 +284,7 @@ TEST_CASE("nucleus/utils/QuadTree")
     }
 }
 
-TEST_CASE("nucleus/utils/QuadTree: on the fly traverse")
+TEST_CASE("sherpa/quad_tree: on the fly traverse")
 {
 
     const auto refine_predicate = [](const auto& node_value) {

@@ -1,6 +1,6 @@
 /*****************************************************************************
- * Alpine Terrain Builder
- * Copyright (C) 2022 alpinemaps.org
+ * Alpine Sherpa
+ * Copyright (C) 2022 Adam Celarek <last name at cg dot tuwien dot ac dot at>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,23 +32,24 @@ using std::size_t;
 // also, it's likely possible to do things in a way, that is better for cpu caches. this is also something that is not done.
 // As many developers learned, such optimisations should be done after profiling, and right now it's more important to finish it.
 
+namespace quad_tree {
 template <typename DataType>
-class QuadTreeNode {
-    using QuadTreeNodePtr = std::unique_ptr<QuadTreeNode>;
+class Node {
+    using QuadTreeNodePtr = std::unique_ptr<Node>;
     DataType m_data = {};
     std::array<QuadTreeNodePtr, 4> m_children = {};
     bool m_children_present = false;
 
 public:
-    QuadTreeNode(const DataType& data)
+    Node(const DataType& data)
         : m_data(data)
     {
     }
     [[nodiscard]] bool hasChildren() const { return m_children_present; }
     void addChildren(const std::array<DataType, 4>& data);
     void removeChildren();
-    QuadTreeNode& operator[](unsigned index);
-    const QuadTreeNode& operator[](unsigned index) const;
+    Node& operator[](unsigned index);
+    const Node& operator[](unsigned index) const;
     auto begin() { return m_children.begin(); }
     auto begin() const { return m_children.begin(); }
     auto end() { return m_children.end(); }
@@ -56,8 +57,6 @@ public:
     DataType& data() { return m_data; }
     const DataType& data() const { return m_data; }
 };
-
-namespace quad_tree {
 
 template <typename DataType, typename PredicateFunction, typename RefineFunction>
 std::vector<DataType> onTheFlyTraverse(const DataType& root, const PredicateFunction& predicate, const RefineFunction& generate_children)
@@ -78,9 +77,9 @@ std::vector<DataType> onTheFlyTraverse(const DataType& root, const PredicateFunc
 }
 
 template <typename DataType, typename Function>
-void visit(QuadTreeNode<DataType>* root, const Function& visitor)
+void visit(Node<DataType>* root, const Function& visitor)
 {
-    using QuadTreeNodePtr = std::unique_ptr<QuadTreeNode<DataType>>;
+    using QuadTreeNodePtr = std::unique_ptr<Node<DataType>>;
     visitor(root->data());
     if (!root->hasChildren()) {
         return;
@@ -92,9 +91,9 @@ void visit(QuadTreeNode<DataType>* root, const Function& visitor)
 }
 
 template <typename DataType, typename Function>
-void visitInnerNodes(QuadTreeNode<DataType>* root, const Function& visitor)
+void visitInnerNodes(Node<DataType>* root, const Function& visitor)
 {
-    using QuadTreeNodePtr = std::unique_ptr<QuadTreeNode<DataType>>;
+    using QuadTreeNodePtr = std::unique_ptr<Node<DataType>>;
     if (!root->hasChildren()) {
         return;
     }
@@ -106,9 +105,9 @@ void visitInnerNodes(QuadTreeNode<DataType>* root, const Function& visitor)
 }
 
 template <typename DataType, typename Function>
-void visitLeaves(QuadTreeNode<DataType>* root, const Function& visitor)
+void visitLeaves(Node<DataType>* root, const Function& visitor)
 {
-    using QuadTreeNodePtr = std::unique_ptr<QuadTreeNode<DataType>>;
+    using QuadTreeNodePtr = std::unique_ptr<Node<DataType>>;
     if (!root->hasChildren()) {
         visitor(root->data());
         return;
@@ -120,7 +119,7 @@ void visitLeaves(QuadTreeNode<DataType>* root, const Function& visitor)
 }
 
 template <typename DataType, typename Predicate>
-std::vector<QuadTreeNode<DataType>*> collectSubtreesWithLeafCondition(QuadTreeNode<DataType>* root, const Predicate& check_leaf)
+std::vector<Node<DataType>*> collectSubtreesWithLeafCondition(Node<DataType>* root, const Predicate& check_leaf)
 {
     if (!root->hasChildren()) {
         if (check_leaf(root->data()))
@@ -133,7 +132,7 @@ std::vector<QuadTreeNode<DataType>*> collectSubtreesWithLeafCondition(QuadTreeNo
     if (all_leaves_match_condition)
         return { root };
 
-    std::vector<QuadTreeNode<DataType>*> subtrees;
+    std::vector<Node<DataType>*> subtrees;
     for (const auto& child : *root) {
         const auto tmp = collectSubtreesWithLeafCondition(child.get(), check_leaf);
         std::copy(tmp.begin(), tmp.end(), std::back_inserter(subtrees));
@@ -142,9 +141,9 @@ std::vector<QuadTreeNode<DataType>*> collectSubtreesWithLeafCondition(QuadTreeNo
 }
 
 template <typename DataType, typename PredicateFunction, typename RefineFunction>
-void refine(QuadTreeNode<DataType>* root, const PredicateFunction& node_needs_refinement, const RefineFunction& generate_children)
+void refine(Node<DataType>* root, const PredicateFunction& node_needs_refinement, const RefineFunction& generate_children)
 {
-    using QuadTreeNodePtr = std::unique_ptr<QuadTreeNode<DataType>>;
+    using QuadTreeNodePtr = std::unique_ptr<Node<DataType>>;
 
     if (!root->hasChildren() && node_needs_refinement(root->data()))
         root->addChildren(generate_children(root->data()));
@@ -160,9 +159,9 @@ void refine(QuadTreeNode<DataType>* root, const PredicateFunction& node_needs_re
 
 // removes all unnecessary children (i.e., if the parent doesn't need refinement).
 template <typename DataType, typename PredicateFunction>
-void reduce(QuadTreeNode<DataType>* root, const PredicateFunction& node_needs_refinement)
+void reduce(Node<DataType>* root, const PredicateFunction& node_needs_refinement)
 {
-    using QuadTreeNodePtr = std::unique_ptr<QuadTreeNode<DataType>>;
+    using QuadTreeNodePtr = std::unique_ptr<Node<DataType>>;
     if (!root->hasChildren())
         return;
     auto remove_children = !node_needs_refinement(root->data());
@@ -175,20 +174,19 @@ void reduce(QuadTreeNode<DataType>* root, const PredicateFunction& node_needs_re
         reduce(node.get(), node_needs_refinement);
     }
 }
-}
 
 template <typename DataType>
-void QuadTreeNode<DataType>::addChildren(const std::array<DataType, 4>& data)
+void Node<DataType>::addChildren(const std::array<DataType, 4>& data)
 {
     if (m_children_present)
         return;
 
     m_children_present = true;
-    std::transform(data.begin(), data.end(), m_children.begin(), [](const auto& data) { return std::make_unique<QuadTreeNode>(data); });
+    std::transform(data.begin(), data.end(), m_children.begin(), [](const auto& data) { return std::make_unique<Node>(data); });
 }
 
 template <typename DataType>
-void QuadTreeNode<DataType>::removeChildren()
+void Node<DataType>::removeChildren()
 {
     if (!m_children_present)
         return;
@@ -200,15 +198,17 @@ void QuadTreeNode<DataType>::removeChildren()
 }
 
 template <typename DataType>
-QuadTreeNode<DataType>& QuadTreeNode<DataType>::operator[](unsigned index)
+Node<DataType>& Node<DataType>::operator[](unsigned index)
 {
     assert(m_children_present);
     return *m_children[index];
 }
 
 template <typename DataType>
-const QuadTreeNode<DataType>& QuadTreeNode<DataType>::operator[](unsigned index) const
+const Node<DataType>& Node<DataType>::operator[](unsigned index) const
 {
     assert(m_children_present);
     return *m_children[index];
+}
+
 }
