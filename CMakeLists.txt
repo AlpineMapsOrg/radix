@@ -17,6 +17,7 @@ set(SHERPA_SOURCES
     geometry.h
     hasher.h
     iterator.h
+    quad_tree.h
     tile.h
     TileHeights.h TileHeights.cpp
 )
@@ -25,6 +26,7 @@ set(SHERPA_UNITTESTS_SOURCES
     unittests/geometry.cpp
     unittests/iterator.cpp
     unittests/main.cpp
+    unittests/quad_tree.cpp
     unittests/tile.cpp
     unittests/tile_heights.cpp
 )
