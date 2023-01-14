@@ -49,7 +49,7 @@ target_include_directories(sherpa
     PRIVATE .
 )
 target_link_libraries(sherpa PUBLIC glm::glm)
-target_compile_definitions(sherpa PUBLIC GLM_FORCE_XYZW_ONLY)
+target_compile_definitions(sherpa PUBLIC GLM_FORCE_XYZW_ONLY GLM_ENABLE_EXPERIMENTAL)
 if (SHERPA_ENABLE_ASSERTS)
     target_compile_options(sherpa PUBLIC "-U NDEBUG")
     target_compile_options(sherpa PUBLIC "-DTNTN_ASSERT_ACTIVE")
