@@ -9,10 +9,6 @@ option(SHERPA_USE_LLVM_LINKER "use lld (llvm) for linking. it's parallel and muc
 
 set(CMAKE_CXX_STANDARD 20)
 
-if (SHERPA_UNITTESTS AND NOT EMSCRIPTEN)
-    find_package(Catch2 REQUIRED)
-endif()
-
 set(SHERPA_SOURCES
     geometry.h
     hasher.h
@@ -31,6 +27,9 @@ set(SHERPA_UNITTESTS_SOURCES
     unittests/tile_heights.cpp
 )
 
+if (ATB_UNITTESTS AND NOT EMSCRIPTEN AND NOT TARGET Catch2)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/libs/Catch2 Catch2)
+endif()
 
 if (SHERPA_ENABLE_ADDRESS_SANITIZER)
     message(NOTICE "building with address sanitizer enabled")
