@@ -27,9 +27,10 @@ set(SHERPA_UNITTESTS_SOURCES
     unittests/tile_heights.cpp
 )
 
-if (ATB_UNITTESTS AND NOT EMSCRIPTEN AND NOT TARGET Catch2)
-    add_subdirectory(${CMAKE_SOURCE_DIR}/libs/Catch2 Catch2)
+if (NOT EMSCRIPTEN AND NOT TARGET Catch2)
+    add_subdirectory(libs/Catch2)
 endif()
+add_subdirectory(libs/glm)
 
 if (SHERPA_ENABLE_ADDRESS_SANITIZER)
     message(NOTICE "building with address sanitizer enabled")
@@ -46,8 +47,8 @@ add_library(sherpa STATIC ${SHERPA_SOURCES})
 
 target_include_directories(sherpa
     PRIVATE .
-    SYSTEM PUBLIC ${CMAKE_SOURCE_DIR}/libs/glm
 )
+target_link_libraries(sherpa PUBLIC glm::glm)
 target_compile_definitions(sherpa PUBLIC GLM_FORCE_XYZW_ONLY)
 if (SHERPA_ENABLE_ASSERTS)
     target_compile_options(sherpa PUBLIC "-U NDEBUG")
