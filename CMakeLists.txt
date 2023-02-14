@@ -27,7 +27,7 @@ set(SHERPA_UNITTESTS_SOURCES
     unittests/tile_heights.cpp
 )
 
-if (NOT EMSCRIPTEN AND NOT TARGET Catch2)
+if (SHERPA_UNITTESTS AND NOT EMSCRIPTEN)
     add_subdirectory(libs/Catch2)
 endif()
 add_subdirectory(libs/glm)
