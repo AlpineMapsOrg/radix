@@ -341,10 +341,10 @@ TEST_CASE("sherpa/quad_tree: on the fly traverse")
                 return std::array<int, 4>({ 11, 11, 11, 11 });
             });
         CHECK(leaves.size() == 7);
-        CHECK(std::ranges::find(leaves, 1) == leaves.end());
+        CHECK(std::find(leaves.begin(), leaves.end(), 1) == leaves.end());
         for (int i = 2; i < 9; ++i) {
-            CHECK(std::ranges::find(leaves, i) != leaves.end());
+            CHECK(std::find(leaves.begin(), leaves.end(), i) != leaves.end());
         }
-        CHECK(std::ranges::find(leaves, 11) == leaves.end());
+        CHECK(std::find(leaves.begin(), leaves.end(), 11) == leaves.end());
     }
 }
