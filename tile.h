@@ -19,11 +19,14 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
-#include <glm/vector_relational.hpp>
+#include <iostream>
 #include <tuple>
 
+#include <glm/glm.hpp>
+#include <glm/vector_relational.hpp>
+
 #include "geometry.h"
+#include "glm/gtx/string_cast.hpp"
 #include "hasher.h"
 
 namespace tile {
@@ -92,6 +95,23 @@ struct Id {
     using Hasher = typename hasher::for_tuple<unsigned, unsigned, unsigned, unsigned>;
 };
 
+// helper for catch2
+inline std::ostream& operator<<(std::ostream& os, const Id& value)
+{
+    std::string scheme;
+    switch (value.scheme) {
+    case Scheme::Tms:
+        scheme = "Tms";
+        break;
+    case Scheme::SlippyMap:
+        scheme = "SlippyMap";
+        break;
+    }
+    os << "{"
+       << value.zoom_level << ", {" << value.coords.x << ", " << value.coords.y << "}, " << scheme
+       << "}";
+    return os;
+}
 
 struct Descriptor {
     // used to generate file name
