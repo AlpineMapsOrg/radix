@@ -27,10 +27,15 @@ set(SHERPA_UNITTESTS_SOURCES
     unittests/tile_heights.cpp
 )
 
-if (SHERPA_UNITTESTS AND NOT EMSCRIPTEN)
-    add_subdirectory(libs/Catch2)
+include(FetchContent)
+if(NOT TARGET glm::glm)
+    FetchContent_Declare(glm GIT_REPOSITORY https://github.com/g-truc/glm.git)
+    FetchContent_MakeAvailable(glm)
 endif()
-add_subdirectory(libs/glm)
+if(ALP_UNITTESTS OR BUILD_TESTING)
+    FetchContent_Declare(catch2 GIT_REPOSITORY https://github.com/catchorg/Catch2.git GIT_TAG v3.3.2)
+    FetchContent_MakeAvailable(catch2)
+endif()
 
 if (SHERPA_ENABLE_ADDRESS_SANITIZER)
     message(NOTICE "building with address sanitizer enabled")
@@ -57,7 +62,7 @@ endif()
 
 if (SHERPA_UNITTESTS AND NOT EMSCRIPTEN)
     add_executable(sherpa_unittests ${SHERPA_UNITTESTS_SOURCES})
-    target_link_libraries(sherpa_unittests PUBLIC sherpa Catch2::Catch2)
+    target_link_libraries(sherpa_unittests PUBLIC sherpa Catch2::Catch2WithMain)
     target_include_directories(sherpa_unittests
         PRIVATE .
     )

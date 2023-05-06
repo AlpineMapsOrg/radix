@@ -18,8 +18,10 @@
 
 #include "geometry.h"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
 
+using Catch::Approx;
 
 namespace {
 template <int n_dims>
@@ -35,9 +37,7 @@ bool test_contains(const geometry::Triangle<3, double>& triangle, const glm::dve
         || glm::length(triangle[1] - b) == Approx(0).scale(scale)
         || glm::length(triangle[2] - b) == Approx(0).scale(scale)));
 }
-}
-
-
+} // namespace
 
 TEST_CASE("sherpa/geometry::Aabb intersect")
 {
