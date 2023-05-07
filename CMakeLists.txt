@@ -7,7 +7,7 @@ option(ALP_ENABLE_ADDRESS_SANITIZER "compiles atb with address sanitizer enabled
 option(ALP_ENABLE_ASSERTS "enable asserts (do not define NDEBUG)" ON)
 set(ALP_INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE PATH "path to the install directory (for webassembly files, i.e., www directory)")
 
-if (UNIX)
+if (UNIX AND NOT EMSCRIPTEN AND NOT ANDROID)
     option(ALP_USE_LLVM_LINKER "use lld (llvm) for linking. it's parallel and much faster, but not installed by default.
         if it's not installed, you'll get errors, that openmp or other stuff is not installed (hard to track down)" OFF)
 endif()
@@ -65,7 +65,7 @@ if (SHERPA_ENABLE_ASSERTS)
     target_compile_options(sherpa PUBLIC "-DTNTN_ASSERT_ACTIVE")
 endif()
 
-if (SHERPA_UNITTESTS)
+if (ALP_UNITTESTS)
     add_executable(sherpa_unittests ${SHERPA_UNITTESTS_SOURCES})
     target_link_libraries(sherpa_unittests PUBLIC sherpa Catch2::Catch2WithMain)
     if (EMSCRIPTEN)
