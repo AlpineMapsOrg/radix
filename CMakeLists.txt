@@ -60,9 +60,18 @@ if (SHERPA_ENABLE_ASSERTS)
     target_compile_options(sherpa PUBLIC "-DTNTN_ASSERT_ACTIVE")
 endif()
 
-if (SHERPA_UNITTESTS AND NOT EMSCRIPTEN)
+if (SHERPA_UNITTESTS)
     add_executable(sherpa_unittests ${SHERPA_UNITTESTS_SOURCES})
     target_link_libraries(sherpa_unittests PUBLIC sherpa Catch2::Catch2WithMain)
+    if (EMSCRIPTEN)
+        set_target_properties(sherpa_unittests PROPERTIES SUFFIX ".html")
+        set(ALP_INSTALL_FILES
+            "$<TARGET_FILE_DIR:sherpa_unittests>/sherpa_unittests.js"
+            "$<TARGET_FILE_DIR:sherpa_unittests>/sherpa_unittests.wasm"
+            "$<TARGET_FILE_DIR:sherpa_unittests>/sherpa_unittests.html"
+        )
+        install(FILES ${ALP_INSTALL_FILES} DESTINATION ${ALP_INSTALL_DIR})
+    endif()
     target_include_directories(sherpa_unittests
         PRIVATE .
     )
