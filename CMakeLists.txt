@@ -2,10 +2,15 @@ cmake_minimum_required(VERSION 3.21)
 
 project(sherpa)
 
-option(SHERPA_UNITTESTS "include unit test targets in the buildsystem" ON)
-option(SHERPA_ENABLE_ADDRESS_SANITIZER "compiles atb with address sanitizer enabled (only debug, works only on g++ and clang)" OFF)
-option(SHERPA_ENABLE_ASSERTS "enable asserts (do not define NDEBUG)" ON)
-option(SHERPA_USE_LLVM_LINKER "use lld (llvm) for linking. it's parallel and much faster, but not installed by default. if it's not installed, you'll get errors, that openmp or other stuff is not installed (hard to track down)" OFF)
+option(ALP_UNITTESTS "include unit test targets in the buildsystem" ON)
+option(ALP_ENABLE_ADDRESS_SANITIZER "compiles atb with address sanitizer enabled (only debug, works only on g++ and clang)" OFF)
+option(ALP_ENABLE_ASSERTS "enable asserts (do not define NDEBUG)" ON)
+set(ALP_INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE PATH "path to the install directory (for webassembly files, i.e., www directory)")
+
+if (UNIX)
+    option(ALP_USE_LLVM_LINKER "use lld (llvm) for linking. it's parallel and much faster, but not installed by default.
+        if it's not installed, you'll get errors, that openmp or other stuff is not installed (hard to track down)" OFF)
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 
