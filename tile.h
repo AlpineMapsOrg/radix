@@ -85,8 +85,8 @@ struct Id {
             Id { zoom_level + 1, coords * 2u + glm::uvec2(1, scheme == Scheme::Tms), scheme }
         };
     }
-    bool operator==(const Id& other) const { return other.coords == coords && other.scheme == scheme && other.zoom_level == zoom_level; };
-    bool operator<(const Id& other) const { return std::tie(zoom_level, coords.x, coords.y, scheme) < std::tie(other.zoom_level, other.coords.x, other.coords.y, other.scheme); };
+    bool operator==(const Id& other) const { return other.coords == coords && other.scheme == scheme && other.zoom_level == zoom_level; }
+    bool operator<(const Id& other) const { return std::tie(zoom_level, coords.x, coords.y, scheme) < std::tie(other.zoom_level, other.coords.x, other.coords.y, other.scheme); }
     operator std::tuple<unsigned, unsigned, unsigned, unsigned>() const
     {
         return std::make_tuple(zoom_level, coords.x, coords.y, unsigned(scheme));
@@ -124,8 +124,8 @@ struct Descriptor {
     // some tiling schemes require a border (e.g. cesium heightmap https://github.com/CesiumGS/cesium/wiki/heightmap-1%2E0).
     // grid bounds does not contain that border (e.g. 64 width)
     // tile bounds contains that border (e.g. 65 width)
-    unsigned gridSize = -1;
-    unsigned tileSize = -1;
+    unsigned gridSize = unsigned(-1);
+    unsigned tileSize = unsigned(-1);
 };
 
 }
