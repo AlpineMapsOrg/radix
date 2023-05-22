@@ -1,6 +1,7 @@
 /*****************************************************************************
  * Alpine Terrain Builder
- * Copyright (C) 2022 alpinemaps.org
+ * Copyright (C) 2022 Adam Celarek
+ * Copyright (c) 2015 Wenzel Jakob (for AABB to point distance)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -129,6 +130,27 @@ template <glm::length_t n_dimensions, typename T>
 glm::vec<n_dimensions, T> centroid(const Aabb<n_dimensions, T>& box)
 {
     return (box.max + box.min) * T(0.5);
+}
+
+template <glm::length_t n_dimensions, typename T>
+T distance(const Aabb<n_dimensions, T>& box, const glm::vec<n_dimensions, T>& point)
+{
+    T distance_squared = 0;
+    for (int i = 0; i < n_dimensions; ++i) {
+        T value = 0;
+        if (point[i] < box.min[i])
+            value = box.min[i] - point[i];
+        else if (point[i] > box.max[i])
+            value = point[i] - box.max[i];
+        distance_squared += value * value;
+    }
+    return std::sqrt(distance_squared);
+}
+
+template <glm::length_t n_dimensions, typename T>
+T distance(const glm::vec<n_dimensions, T>& a, const glm::vec<n_dimensions, T>& b)
+{
+    return glm::distance(a, b);
 }
 
 template <typename T>
