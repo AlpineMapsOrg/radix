@@ -76,6 +76,15 @@ TEST_CASE("sherpa/geometry")
         CHECK(geometry::inside(glm::dvec3(5, 5, 5), box));
         CHECK(!geometry::inside(glm::dvec3(5, 15, 5), box));
         CHECK(equals(geometry::centroid(box), { 5.0, 6.0, 7.0 }));
+
+        CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 0.0, 0.0, 0.0 }, .max = { 1.0, 1.0, 1.0 } }, glm::dvec3(0, 0, 0)) == Approx(0));
+        CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 0.0, 0.0, 0.0 }, .max = { 1.0, 1.0, 1.0 } }, glm::dvec3(-1, 0, 0)) == Approx(1));
+        CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 0.0, 1.0, 0.0 }, .max = { 1.0, 2.0, 1.0 } }, glm::dvec3(-1, 0, 0)) == Approx(std::sqrt(2)));
+        CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 0.0, 1.0, 2.0 }, .max = { 1.0, 2.0, 1.0 } }, glm::dvec3(-1, 0, 1)) == Approx(std::sqrt(3)));
+        CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 0.0, 0.0, 0.0 }, .max = { 1.0, 1.0, 1.0 } }, glm::dvec3(2, 0, 0)) == Approx(1));
+        CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 10.0, 10.0, 10.0 }, .max = { 22.0, 22.0, 22.0 } }, glm::dvec3(0, 0, 0)) == Approx(std::sqrt(300)));
+        CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 10.0, 10.0, 10.0 }, .max = { 22.0, 22.0, 22.0 } }, glm::dvec3(23, 23, 23)) == Approx(std::sqrt(3)));
+        CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 10.0, 10.0, 10.0 }, .max = { 22.0, 22.0, 22.0 } }, glm::dvec3(23, 22, 22)) == Approx(1));
     }
     SECTION("aabb size")
     {
