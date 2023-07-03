@@ -19,9 +19,10 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
-#include <vector>
 #include <iterator>
+#include <vector>
 
 #include <glm/glm.hpp>
 
@@ -251,4 +252,41 @@ std::vector<Triangle<3, T>> triangulise(const Aabb<3, T>& box)
         { e, g, f }, { e, h, g } });
 }
 
+template<typename T>
+std::array<glm::vec<3, T>, 8> corners(const Aabb<3, T> &box)
+{
+    using Vert = glm::vec<3, T>;
+
+    // counter clockwise top face
+    const auto a = Vert{box.min.x, box.min.y, box.max.z};
+    const auto b = Vert{box.max.x, box.min.y, box.max.z};
+    const auto c = Vert{box.max.x, box.max.y, box.max.z};
+    const auto d = Vert{box.min.x, box.max.y, box.max.z};
+    // ccw bottom face, normal points up
+    const auto e = Vert{box.min.x, box.min.y, box.min.z};
+    const auto f = Vert{box.max.x, box.min.y, box.min.z};
+    const auto g = Vert{box.max.x, box.max.y, box.min.z};
+    const auto h = Vert{box.min.x, box.max.y, box.min.z};
+
+    return {a, b, c, d, e, f, g, h};
+}
+
+template<glm::length_t n_dimensions, typename T, typename VectorOfPlanes>
+bool inside_old(const Aabb<n_dimensions, T>& box, const VectorOfPlanes& planes)
+{
+    const auto triangles = geometry::clip(geometry::triangulise(box), planes);
+    return !triangles.empty();
+}
+
+template<glm::length_t n_dimensions, typename T, typename VectorOfPlanes>
+bool inside(const Aabb<n_dimensions, T>& box, const VectorOfPlanes& planes)
+{
+    using Vert = glm::vec<n_dimensions, T>;
+    const auto cs = corners(box);
+    for (const auto& p : planes) {
+        if (std::none_of(cs.begin(), cs.end(), [&p](const Vert& c) { return distance(p, c) > 0; }))
+            return false;
+    }
+    return true;
+}
 }

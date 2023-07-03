@@ -231,11 +231,54 @@ TEST_CASE("sherpa/geometry")
         CHECK(!clipped_triangles.empty());
     }
 
-    // turn aabb into list of triangles
-    // get clipping planes from camera
-    // clip
-    // from clipped triangles, take the closest point
-    // compute point 1px away parallel to screen
-    // transform back, subtract, compute length
-    // compare with box side length -> more than 1/256 -> we need to subdivide
+    SECTION("aabb inside planes")
+    {
+        // move old test from cameraFrustumContainsTile
+        // replace with corners(aabb) distance test (all distances positive for all planes?)
+        const auto planes = std::vector{
+            geometry::Plane<double>{glm::normalize(glm::dvec3{0.0, 1.0, -1.0}), 0},
+            geometry::Plane<double>{glm::normalize(glm::dvec3{0.0, 1.0, 1.0}), 0},
+            geometry::Plane<double>{glm::normalize(glm::dvec3{1.0, 1.0, 0.0}), 0},
+            geometry::Plane<double>{glm::normalize(glm::dvec3{-1.0, 1.0, 0.0}), 0},
+            geometry::Plane<double>{glm::normalize(glm::dvec3{0.0, 1.0, 0.0}), 0},
+        };
+        CHECK(geometry::inside_old(geometry::Aabb<3, double>{{-1., 10., -1.}, {1., 10., 1.}},
+                                   planes));
+        CHECK(geometry::inside_old(geometry::Aabb<3, double>{{0., 0., 0.}, {1., 1., 1.}}, planes));
+        CHECK(geometry::inside_old(geometry::Aabb<3, double>{{-10., -10., -10.}, {10., 1., 10.}},
+                                   planes));
+        CHECK(!geometry::inside_old(geometry::Aabb<3, double>{{-10., -10., -10.}, {10., -1., 10.}},
+                                    planes));
+        CHECK(!geometry::inside_old(geometry::Aabb<3, double>{{-10., 0., -10.}, {-9., 1., -9.}},
+                                    planes));
+
+        CHECK(geometry::inside(geometry::Aabb<3, double>{{-1., 10., -1.}, {1., 10., 1.}}, planes));
+        CHECK(geometry::inside(geometry::Aabb<3, double>{{0., 0., 0.}, {1., 1., 1.}}, planes));
+        CHECK(geometry::inside(geometry::Aabb<3, double>{{-10., -10., -10.}, {10., 1., 10.}},
+                               planes));
+        CHECK(!geometry::inside(geometry::Aabb<3, double>{{-10., -10., -10.}, {10., -1., 10.}},
+                                planes));
+        CHECK(
+            !geometry::inside(geometry::Aabb<3, double>{{-10., 0., -10.}, {-9., 1., -9.}}, planes));
+    }
+
+    SECTION("aabb inside planes 2")
+    {
+        // move old test from cameraFrustumContainsTile
+        // replace with corners(aabb) distance test (all distances positive for all planes?)
+        const auto planes = std::vector{
+            geometry::Plane<double>{glm::normalize(glm::dvec3{-1.0, -0.20, -0.1}), -1},
+            geometry::Plane<double>{glm::normalize(glm::dvec3{1.0, 0.2, 0.1}), 1'000'000},
+            geometry::Plane<double>{glm::normalize(glm::dvec3{-0.4, -0.1, -0.9}), 0},
+            geometry::Plane<double>{glm::normalize(glm::dvec3{-0.6, -0.1, 0.8}), 0},
+            geometry::Plane<double>{glm::normalize(glm::dvec3{-0.9, 0.5, -0.1}), 0},
+            geometry::Plane<double>{glm::normalize(glm::dvec3{-0.6, -0.8, -0.1}), 0},
+        };
+        CHECK(!geometry::inside(
+            geometry::Aabb<3, double>{{45873., -508065., -1257.},
+                                      {672045.,
+                                       118107.,
+                                       -100.}}, // check what would be the correct solution (in or out)
+            planes));
+    }
 }
