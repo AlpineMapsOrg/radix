@@ -153,16 +153,50 @@ TEST_CASE("sherpa/geometry")
         CHECK(geometry::distance(plane, { 2.0, 2.0, 2.0 }) == Approx(std::sqrt(3)).scale(1.0));
         CHECK(geometry::distance(plane, { 0.0, 0.0, 0.0 }) == Approx(-std::sqrt(3)).scale(1.0));
         {
-            const auto intersection = geometry::intersect({ glm::dvec3 { 0.0, 0.0, 0.0 }, glm::dvec3 { 2.0, 2.0, 2.0 } }, plane);
+            const auto intersection = geometry::intersection(geometry::Edge<3, double>{ glm::dvec3 { 0.0, 0.0, 0.0 }, glm::dvec3 { 2.0, 2.0, 2.0 } }, plane);
             CHECK(intersection.x == Approx(1.0));
             CHECK(intersection.y == Approx(1.0));
             CHECK(intersection.z == Approx(1.0));
         }
         {
-            const auto intersection = geometry::intersect({ glm::dvec3 { 4.0, 4.0, 4.0 }, glm::dvec3 { -1.0, -1.0, -1.0 } }, plane);
+            const auto intersection = geometry::intersection(geometry::Edge<3, double>{ glm::dvec3 { 4.0, 4.0, 4.0 }, glm::dvec3 { -1.0, -1.0, -1.0 } }, plane);
             CHECK(intersection.x == Approx(1.0));
             CHECK(intersection.y == Approx(1.0));
             CHECK(intersection.z == Approx(1.0));
+        }
+    }
+
+    SECTION("plane plane intersection") {
+        CHECK(!geometry::intersection(geometry::Plane<double> {glm::dvec3 { 1.0, 0.0, 0.0 }, 1 }, geometry::Plane<double> {glm::dvec3 { 1.0, 0.0, 0.0 }, -1}));
+
+        {
+            const auto i = geometry::intersection(geometry::Plane<double> {glm::dvec3 { 1.0, 0.0, 0.0 }, -1 }, geometry::Plane<double> {glm::dvec3 { 0.0, -1.0, 0.0 }, -2});
+            REQUIRE(i);
+            CHECK(equals(i.value().direction, glm::dvec3{0, 0, -1}));
+            CHECK(equals(i.value().point, glm::dvec3{1, -2, 0}));
+        }
+        {
+            const auto i = geometry::intersection(geometry::Plane<double> {glm::dvec3 { 0.0, 0.0, 1.0 }, 5 }, geometry::Plane<double> {glm::dvec3 { 0.0, 1.0, 0.0 }, -1});
+            REQUIRE(i);
+            CHECK(equals(i.value().direction, glm::dvec3{-1, 0, 0}));
+            CHECK(equals(i.value().point, glm::dvec3{0, 1, -5}));
+        }
+    }
+
+    SECTION("line plane intersection") {
+        CHECK(!geometry::intersection(geometry::Line<3, double> {glm::dvec3 { 0.0, 0.0, 0.0 }, glm::dvec3 { 0.0, 1.0, 0.0 } }, geometry::Plane<double> {glm::dvec3 { 0.0, 0.0, 1.0 }, -1}));
+
+        {
+            const auto i = geometry::intersection(geometry::Line<3, double> {.point = glm::dvec3 { 0.0, 0.0, 0.0 }, .direction = glm::dvec3 { 0.0, 0.0, 1.0 } },
+                                                  geometry::Plane<double> {glm::dvec3 { 0.0, 0.0, 1.0 }, -1});
+            REQUIRE(i);
+            CHECK(equals(i.value(), glm::dvec3{0, 0, 1}));
+        }
+        {
+            const auto i = geometry::intersection(geometry::Line<3, double> {.point = glm::dvec3 { 2.0, 2.0, 2.0 }, .direction = glm::normalize(glm::dvec3 { 1.0, 1.0, 1.0 }) },
+                                                  geometry::Plane<double> {glm::normalize(glm::dvec3 { 1.0, 2.0, 3.0 }), 0});
+            REQUIRE(i);
+            CHECK(equals(i.value(), glm::dvec3{0, 0, 0}));
         }
     }
 
@@ -229,56 +263,5 @@ TEST_CASE("sherpa/geometry")
         const auto triangles = geometry::triangulise(box);
         const auto clipped_triangles = geometry::clip(triangles, plane);
         CHECK(!clipped_triangles.empty());
-    }
-
-    SECTION("aabb inside planes")
-    {
-        // move old test from cameraFrustumContainsTile
-        // replace with corners(aabb) distance test (all distances positive for all planes?)
-        const auto planes = std::vector{
-            geometry::Plane<double>{glm::normalize(glm::dvec3{0.0, 1.0, -1.0}), 0},
-            geometry::Plane<double>{glm::normalize(glm::dvec3{0.0, 1.0, 1.0}), 0},
-            geometry::Plane<double>{glm::normalize(glm::dvec3{1.0, 1.0, 0.0}), 0},
-            geometry::Plane<double>{glm::normalize(glm::dvec3{-1.0, 1.0, 0.0}), 0},
-            geometry::Plane<double>{glm::normalize(glm::dvec3{0.0, 1.0, 0.0}), 0},
-        };
-        CHECK(geometry::inside_old(geometry::Aabb<3, double>{{-1., 10., -1.}, {1., 10., 1.}},
-                                   planes));
-        CHECK(geometry::inside_old(geometry::Aabb<3, double>{{0., 0., 0.}, {1., 1., 1.}}, planes));
-        CHECK(geometry::inside_old(geometry::Aabb<3, double>{{-10., -10., -10.}, {10., 1., 10.}},
-                                   planes));
-        CHECK(!geometry::inside_old(geometry::Aabb<3, double>{{-10., -10., -10.}, {10., -1., 10.}},
-                                    planes));
-        CHECK(!geometry::inside_old(geometry::Aabb<3, double>{{-10., 0., -10.}, {-9., 1., -9.}},
-                                    planes));
-
-        CHECK(geometry::inside(geometry::Aabb<3, double>{{-1., 10., -1.}, {1., 10., 1.}}, planes));
-        CHECK(geometry::inside(geometry::Aabb<3, double>{{0., 0., 0.}, {1., 1., 1.}}, planes));
-        CHECK(geometry::inside(geometry::Aabb<3, double>{{-10., -10., -10.}, {10., 1., 10.}},
-                               planes));
-        CHECK(!geometry::inside(geometry::Aabb<3, double>{{-10., -10., -10.}, {10., -1., 10.}},
-                                planes));
-        CHECK(
-            !geometry::inside(geometry::Aabb<3, double>{{-10., 0., -10.}, {-9., 1., -9.}}, planes));
-    }
-
-    SECTION("aabb inside planes 2")
-    {
-        // move old test from cameraFrustumContainsTile
-        // replace with corners(aabb) distance test (all distances positive for all planes?)
-        const auto planes = std::vector{
-            geometry::Plane<double>{glm::normalize(glm::dvec3{-1.0, -0.20, -0.1}), -1},
-            geometry::Plane<double>{glm::normalize(glm::dvec3{1.0, 0.2, 0.1}), 1'000'000},
-            geometry::Plane<double>{glm::normalize(glm::dvec3{-0.4, -0.1, -0.9}), 0},
-            geometry::Plane<double>{glm::normalize(glm::dvec3{-0.6, -0.1, 0.8}), 0},
-            geometry::Plane<double>{glm::normalize(glm::dvec3{-0.9, 0.5, -0.1}), 0},
-            geometry::Plane<double>{glm::normalize(glm::dvec3{-0.6, -0.8, -0.1}), 0},
-        };
-        CHECK(!geometry::inside(
-            geometry::Aabb<3, double>{{45873., -508065., -1257.},
-                                      {672045.,
-                                       118107.,
-                                       -100.}}, // check what would be the correct solution (in or out)
-            planes));
     }
 }

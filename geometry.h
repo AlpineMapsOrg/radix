@@ -22,11 +22,19 @@
 #include <algorithm>
 #include <array>
 #include <iterator>
+#include <optional>
 #include <vector>
 
 #include <glm/glm.hpp>
 
 namespace geometry {
+
+template <typename T = double> requires std::is_floating_point_v<T>
+static constexpr T epsilon = 0.0000001;
+
+template <>
+inline constexpr float epsilon<> = 0.0001f;
+
 template <glm::length_t n_dims, class T>
 class Aabb {
     using Vec = glm::vec<n_dims, T>;
@@ -103,8 +111,16 @@ Aabb<3, T> intersection(const Aabb<3, T>& a, const Aabb<3, T>& b)
 template <glm::length_t n_dimensions, typename T>
 using Triangle = std::array<glm::vec<n_dimensions, T>, 3>;
 
+/// defined by two points, i.e, an edge is finite
 template <glm::length_t n_dimensions, typename T>
 using Edge = std::array<glm::vec<n_dimensions, T>, 2>;
+
+/// defined by a point and an direction, it is inifinite in both directions
+template <glm::length_t n_dimensions, typename T>
+struct Line {
+    glm::vec<n_dimensions, T> point;
+    glm::vec<n_dimensions, T> direction;
+};
 
 template <typename T>
 struct Plane {
@@ -162,12 +178,41 @@ T distance(const Plane<T>& plane, const glm::tvec3<T>& point)
 }
 
 template <typename T>
-glm::tvec3<T> intersect(const Edge<3, T>& line, const Plane<T>& plane)
+std::optional<glm::tvec3<T>> intersection(const Line<3, T>& line, const Plane<T>& plane)
 {
-    // from https://gabrielgambetta.com/computer-graphics-from-scratch/11-clipping.html
-    const auto b_minus_a = line[1] - line[0];
-    T t = (-plane.distance - glm::dot(plane.normal, line[0])) / glm::dot(plane.normal, b_minus_a);
-    return line[0] + t * b_minus_a;
+    // adapted from https://gabrielgambetta.com/computer-graphics-from-scratch/11-clipping.html
+    const auto dot = glm::dot(plane.normal, line.direction);
+    if (std::abs(dot) < epsilon<T>)
+        return {};
+    T t = (-plane.distance - glm::dot(plane.normal, line.point)) / dot;
+    return line.point + t * line.direction;
+}
+
+template <typename T>
+glm::tvec3<T> intersection(const Edge<3, T>& line, const Plane<T>& plane)
+{
+    const auto direction = line[1] - line[0];
+    return intersection(Line{line[0], direction}, plane).value();
+}
+
+
+template <typename T>
+std::optional<Line<3, T>> intersection(const Plane<T>& p1, const Plane<T>& p2)
+{
+    // adapted from https://stackoverflow.com/questions/6408670/line-of-intersection-between-two-planes
+
+    // logically the 3rd plane, but we only use the normal component.
+    const auto p3_normal = glm::cross(p1.normal, p2.normal);
+    const auto det = glm::dot(p3_normal, p3_normal);
+
+    // If the determinant is 0, that means parallel planes, no intersection.
+    if (std::abs(det) <= epsilon<T>)
+        return {};
+
+    // calculate the final (point, normal)
+    const auto r_point = ((glm::cross(p3_normal, p2.normal) * p1.distance) +
+                          (glm::cross(p1.normal, p3_normal) * p2.distance)) / det;
+    return Line<3, T>{r_point, p3_normal};
 }
 
 template <typename T>
@@ -175,8 +220,8 @@ std::vector<Triangle<3, T>> clip(const Triangle<3, T>& triangle, const Plane<T>&
 {
     using Tri = Triangle<3, T>;
     const auto triangles_2in = [&plane](const glm::tvec3<T>& inside_a, const glm::tvec3<T>& inside_b, const glm::tvec3<T>& outside_c) {
-        const auto a_prime = intersect({ inside_a, outside_c }, plane);
-        const auto b_prime = intersect({ inside_b, outside_c }, plane);
+        const auto a_prime = intersection(geometry::Edge<3, T>{ inside_a, outside_c }, plane);
+        const auto b_prime = intersection(geometry::Edge<3, T>{ inside_b, outside_c }, plane);
         return std::vector<Tri>({ Tri { inside_a, inside_b, b_prime }, Tri { inside_a, b_prime, a_prime } });
     };
 
@@ -197,11 +242,11 @@ std::vector<Triangle<3, T>> clip(const Triangle<3, T>& triangle, const Plane<T>&
     }
     if (s == 1) {
         if (b0)
-            return { { triangle[0], intersect({ triangle[0], triangle[1] }, plane), intersect({ triangle[0], triangle[2] }, plane) } };
+            return { { triangle[0], intersection(geometry::Edge<3, T>{ triangle[0], triangle[1] }, plane), intersection(geometry::Edge<3, T>{ triangle[0], triangle[2] }, plane) } };
         if (b1)
-            return { { intersect({ triangle[0], triangle[1] }, plane), triangle[1], intersect({ triangle[1], triangle[2] }, plane) } };
+            return { { intersection(geometry::Edge<3, T>{ triangle[0], triangle[1] }, plane), triangle[1], intersection(geometry::Edge<3, T>{ triangle[1], triangle[2] }, plane) } };
         if (b2)
-            return { { intersect({ triangle[0], triangle[2] }, plane), intersect({ triangle[1], triangle[2] }, plane), triangle[2] } };
+            return { { intersection(geometry::Edge<3, T>{ triangle[0], triangle[2] }, plane), intersection(geometry::Edge<3, T>{ triangle[1], triangle[2] }, plane), triangle[2] } };
         assert(false);
     }
     return {};
@@ -269,24 +314,5 @@ std::array<glm::vec<3, T>, 8> corners(const Aabb<3, T> &box)
     const auto h = Vert{box.min.x, box.max.y, box.min.z};
 
     return {a, b, c, d, e, f, g, h};
-}
-
-template<glm::length_t n_dimensions, typename T, typename VectorOfPlanes>
-bool inside_old(const Aabb<n_dimensions, T>& box, const VectorOfPlanes& planes)
-{
-    const auto triangles = geometry::clip(geometry::triangulise(box), planes);
-    return !triangles.empty();
-}
-
-template<glm::length_t n_dimensions, typename T, typename VectorOfPlanes>
-bool inside(const Aabb<n_dimensions, T>& box, const VectorOfPlanes& planes)
-{
-    using Vert = glm::vec<n_dimensions, T>;
-    const auto cs = corners(box);
-    for (const auto& p : planes) {
-        if (std::none_of(cs.begin(), cs.end(), [&p](const Vert& c) { return distance(p, c) > 0; }))
-            return false;
-    }
-    return true;
 }
 }
