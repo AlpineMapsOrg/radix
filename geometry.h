@@ -29,11 +29,12 @@
 
 namespace geometry {
 
-template <typename T = double> requires std::is_floating_point_v<T>
-static constexpr T epsilon = 0.0000001;
+template <typename T = double>
+    requires std::is_floating_point_v<T>
+inline constexpr T epsilon = 0.0000001;
 
 template <>
-inline constexpr float epsilon<> = 0.0001f;
+inline constexpr float epsilon<float> = 0.0001f;
 
 template <glm::length_t n_dims, class T>
 class Aabb {
@@ -264,8 +265,8 @@ std::vector<Triangle<3, T>> clip(const std::vector<Triangle<3, T>>& triangles, c
     return ret;
 }
 
-template <typename T>
-std::vector<Triangle<3, T>> clip(std::vector<Triangle<3, T>> triangles, const std::vector<Plane<T>>& planes)
+template <typename T, typename PlaneContainer>
+std::vector<Triangle<3, T>> clip(std::vector<Triangle<3, T>> triangles, const PlaneContainer& planes)
 {
     for (const auto& plane : planes)
         triangles = geometry::clip(triangles, plane);
