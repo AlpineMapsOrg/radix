@@ -18,9 +18,11 @@
 
 #include <filesystem>
 
+#include <catch2/benchmark/catch_benchmark.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include "TileHeights.h"
+#include "quad_tree.h"
 
 TEST_CASE("sherpa/TileHeights emplace and query")
 {
@@ -74,7 +76,34 @@ TEST_CASE("sherpa/TileHeights emplace and query")
         }
     }
 }
+TEST_CASE("sherpa/TileHeights query performance")
+{
+    TileHeights tile_heights;
+    std::vector<tile::Id> ids;
+    quad_tree::onTheFlyTraverse(
+        tile::Id { 0, { 0, 0 } },
+        [](const tile::Id& v) { return v.zoom_level < 14 && v.coords.x < 100 && v.coords.y < 40; },
+        [&](const tile::Id& v) {
+            tile_heights.emplace(v, { 0.f, 1.f });
+            return v.children();
+        });
+    quad_tree::onTheFlyTraverse(
+        tile::Id { 0, { 0, 0 } },
+        [](const tile::Id& v) { return v.zoom_level < 18 && v.coords.x < 100 && v.coords.y < 40; },
+        [&](const tile::Id& v) {
+            ids.emplace_back(v);
+            return v.children();
+        });
 
+    BENCHMARK("TileHeights::query()")
+    {
+        float retval = 0;
+        for (const auto& id : ids) {
+            retval += tile_heights.query(id).second;
+        }
+        return retval;
+    };
+}
 
 TEST_CASE("sherpa/TileHeights serialisation")
 {
