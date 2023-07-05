@@ -22,10 +22,29 @@
 #include "TileHeights.h"
 
 namespace {
-auto key(const tile::Id& tile_id)
+TileHeights::KeyType key(const tile::Id& tile_id)
 {
-    const auto id = tile_id.to(tile::Scheme::Tms);
-    return std::make_tuple(id.zoom_level, id.coords.x, id.coords.y);
+    //    const auto id = tile_id.to(tile::Scheme::Tms);
+    //    return std::make_tuple(id.zoom_level, id.coords.x, id.coords.y);
+    assert(tile_id.zoom_level < 28);
+    u_int64_t key = tile_id.zoom_level;
+    key <<= 28;
+    key |= tile_id.coords.x;
+    key <<= 28;
+    key |= tile_id.coords.y;
+    return key;
+}
+
+tile::Id decode_key(TileHeights::KeyType key)
+{
+    //    return { std::get<0>(key), { std::get<1>(key), std::get<2>(key) } };
+
+    const uint coords_y = key & 0xF'FF'FF'FF;
+    key >>= 28;
+    const uint coords_x = key & 0xF'FF'FF'FF;
+    key >>= 28;
+    const auto zoom = uint(key);
+    return { zoom, { coords_x, coords_y } };
 }
 }
 
@@ -33,11 +52,15 @@ TileHeights::TileHeights() = default;
 
 void TileHeights::emplace(const tile::Id& tile_id, const std::pair<float, float>& min_max)
 {
+    assert(decode_key(key(tile_id)) == tile_id);
+    m_max_zoom_level = std::max(m_max_zoom_level, tile_id.zoom_level);
     m_data[key(tile_id)] = min_max;
 }
 
 TileHeights::ValueType TileHeights::query(tile::Id tile_id) const
 {
+    while (tile_id.zoom_level > m_max_zoom_level)
+        tile_id = tile_id.parent();
     auto iter = m_data.find(key(tile_id));
     while (iter == m_data.end()) {
         tile_id = tile_id.parent();
@@ -83,7 +106,8 @@ std::vector<std::byte> TileHeights::serialise() const
     std::vector<std::pair<glm::uvec3, ValueType>> vector_data;
     vector_data.reserve(m_data.size());
     for (const auto& d : m_data) {
-        vector_data.emplace_back(glm::uvec3 { std::get<0>(d.first), std::get<1>(d.first), std::get<2>(d.first) }, d.second);
+        const auto id = decode_key(d.first);
+        vector_data.emplace_back(glm::uvec3 { id.zoom_level, id.coords.x, id.coords.y }, d.second);
     }
     const uint64_t size = vector_data.size();
 

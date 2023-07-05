@@ -27,9 +27,16 @@
 #include "tile.h"
 
 class TileHeights {
-    using KeyType = std::tuple<unsigned, unsigned, unsigned>;
+public:
+    //    using KeyType = std::tuple<unsigned, unsigned, unsigned>;
+    using KeyType = u_int64_t;
     using ValueType = std::pair<float, float>;
-    std::unordered_map<KeyType, ValueType, hasher::for_tuple<unsigned, unsigned, unsigned>> m_data;
+
+private:
+    //    std::unordered_map<KeyType, ValueType, hasher::for_tuple<unsigned, unsigned, unsigned>> m_data;
+    std::unordered_map<KeyType, ValueType> m_data;
+    unsigned m_max_zoom_level = 0;
+
 public:
     TileHeights();
     void emplace(const tile::Id& tile_id, const std::pair<float, float>& min_max);
@@ -46,7 +53,7 @@ public:
         if (size > uint64_t(1024 * 1024 * 50))
             return {};
 
-        static_assert(sizeof(std::pair<KeyType, ValueType>) == 5 * 4);
+        static_assert(sizeof(std::pair<glm::uvec3, ValueType>) == 5lu * 4u);
         std::vector<std::pair<glm::uvec3, ValueType>> vector_data;
         const auto data_size_in_bytes = size * sizeof(decltype(vector_data.front()));
 
@@ -58,9 +65,11 @@ public:
 
         TileHeights new_heights;
         for (const auto& entry : vector_data) {
-            new_heights.m_data[std::make_tuple(entry.first.x, entry.first.y, entry.first.z)] = entry.second;
+            const auto tile_id = tile::Id { entry.first.x, { entry.first.y, entry.first.z } };
+            new_heights.emplace(tile_id, entry.second);
+            //            new_heights.m_max_zoom_level = std::max(new_heights.m_max_zoom_level, entry.first.x);
+            //            new_heights.m_data[std::make_tuple(entry.first.x, entry.first.y, entry.first.z)] = entry.second;
         }
         return new_heights;
     }
 };
-
