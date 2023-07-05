@@ -27,7 +27,7 @@ TileHeights::KeyType key(const tile::Id& tile_id)
     //    const auto id = tile_id.to(tile::Scheme::Tms);
     //    return std::make_tuple(id.zoom_level, id.coords.x, id.coords.y);
     assert(tile_id.zoom_level < 28);
-    u_int64_t key = tile_id.zoom_level;
+    uint64_t key = tile_id.zoom_level;
     key <<= 28;
     key |= tile_id.coords.x;
     key <<= 28;
@@ -39,11 +39,11 @@ tile::Id decode_key(TileHeights::KeyType key)
 {
     //    return { std::get<0>(key), { std::get<1>(key), std::get<2>(key) } };
 
-    const uint coords_y = key & 0xF'FF'FF'FF;
+    const uint32_t coords_y = key & 0x0F'FF'FF'FF;
     key >>= 28;
-    const uint coords_x = key & 0xF'FF'FF'FF;
+    const uint32_t coords_x = key & 0x0F'FF'FF'FF;
     key >>= 28;
-    const auto zoom = uint(key);
+    const auto zoom = uint32_t(key);
     return { zoom, { coords_x, coords_y } };
 }
 }

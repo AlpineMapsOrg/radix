@@ -29,7 +29,7 @@
 class TileHeights {
 public:
     //    using KeyType = std::tuple<unsigned, unsigned, unsigned>;
-    using KeyType = u_int64_t;
+    using KeyType = uint64_t;
     using ValueType = std::pair<float, float>;
 
 private:
