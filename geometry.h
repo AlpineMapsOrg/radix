@@ -122,12 +122,18 @@ struct Line {
     glm::vec<n_dimensions, T> point;
     glm::vec<n_dimensions, T> direction;
 };
+// deduction guide:
+template <glm::length_t n_dimensions, typename T>
+Line(glm::vec<n_dimensions, T>, glm::vec<n_dimensions, T>) -> Line<n_dimensions, T>;
 
 template <typename T>
 struct Plane {
     glm::vec<3, T> normal;
     T distance;
 };
+// deduction guide:
+template <typename T>
+Plane(glm::vec<3, T>, T) -> Plane<T>;
 
 // functions
 template <glm::length_t n_dimensions, typename T>
