@@ -22,6 +22,7 @@ set(SHERPA_SOURCES
     quad_tree.h
     tile.h
     TileHeights.h TileHeights.cpp
+    height_encoding.h
 )
 
 set(SHERPA_UNITTESTS_SOURCES
@@ -31,6 +32,7 @@ set(SHERPA_UNITTESTS_SOURCES
     unittests/quad_tree.cpp
     unittests/tile.cpp
     unittests/tile_heights.cpp
+    unittests/height_encoding.cpp
 )
 
 include(FetchContent)
