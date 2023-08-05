@@ -24,17 +24,25 @@
 
 namespace sherpa::height_encoding {
 
+constexpr float min_height = 0.f;
+constexpr float max_height = 8191.875f;
+static_assert(max_height > min_height);
+
 inline glm::u8vec3 convert(float height)
 {
-    const auto r = std::clamp(int(height / 32.0f), 0, 255);
-    const auto g = std::clamp(int(std::fmod(height, 32.0f) * 8), 0, 255);
+    height -= min_height;
+    constexpr float scaling_factor = 65535.f / (max_height - min_height);
 
+    uint scaled = uint(height * scaling_factor + 0.5f);
+    const auto r = (scaled >> 8u) & 255u;
+    const auto g = scaled & 255u;
     return {glm::u8(r), glm::u8(g), 0};
 }
 
 inline float convert(glm::u8vec3 v)
 {
-    return float(v.x << 8 | v.y) * 8191.875f / 65535.f;
+    constexpr float scaling_factor = (max_height - min_height) / 65535.f;
+    return float(v.x << 8 | v.y) * scaling_factor + min_height;
 }
 
 } // namespace sherpa::height_encoding
