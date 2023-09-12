@@ -14,7 +14,7 @@ endif()
 
 include(FetchContent)
 if(NOT TARGET glm::glm)
-    FetchContent_Declare(glm GIT_REPOSITORY https://github.com/g-truc/glm.git)
+    FetchContent_Declare(glm URL https://github.com/g-truc/glm/archive/refs/heads/master.zip)
     FetchContent_MakeAvailable(glm)
 endif()
 
