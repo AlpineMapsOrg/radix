@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(radix_lib)
+project(radix_src)
 
 option(ALP_ENABLE_ADDRESS_SANITIZER "compiles atb with address sanitizer enabled (only debug, works only on g++ and clang)" OFF)
 option(ALP_ENABLE_ASSERTS "enable asserts (do not define NDEBUG)" ON)
