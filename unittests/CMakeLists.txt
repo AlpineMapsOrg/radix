@@ -1,0 +1,41 @@
+cmake_minimum_required(VERSION 3.21)
+project(radix_unittests)
+
+include(FetchContent)
+FetchContent_Declare(catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG v3.3.2
+    SOURCE_DIR 		${CMAKE_SOURCE_DIR}/3rdparty/Catch2
+)
+FetchContent_MakeAvailable(catch2)
+
+set(RADIX_UNITTESTS_SOURCES
+    geometry.cpp
+    iterator.cpp
+    main.cpp
+    quad_tree.cpp
+    tile.cpp
+    tile_heights.cpp
+    height_encoding.cpp
+)
+if (ANDROID)
+    qt_add_executable(unittests_radix ${RADIX_UNITTESTS_SOURCES})
+    target_link_libraries(unittests_radix PUBLIC Qt::Core Qt::Gui)
+    install(TARGETS unittests_radix
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+else()
+    add_executable(unittests_radix ${RADIX_UNITTESTS_SOURCES})
+endif()
+target_link_libraries(unittests_radix PUBLIC radix Catch2::Catch2)
+
+if (EMSCRIPTEN)
+    set_target_properties(unittests_radix PROPERTIES SUFFIX ".html")
+    set(ALP_INSTALL_FILES
+        "$<TARGET_FILE_DIR:unittests_radix>/unittests_radix.js"
+        "$<TARGET_FILE_DIR:unittests_radix>/unittests_radix.wasm"
+        "$<TARGET_FILE_DIR:unittests_radix>/unittests_radix.html"
+    )
+    install(FILES ${ALP_INSTALL_FILES} DESTINATION ${ALP_WWW_INSTALL_DIR})
+endif()
