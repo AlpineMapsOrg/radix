@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-#include "geometry.h"
+#include <radix/geometry.h>
 
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -39,7 +39,7 @@ bool test_contains(const geometry::Triangle<3, double>& triangle, const glm::dve
 }
 } // namespace
 
-TEST_CASE("sherpa/geometry::Aabb intersect")
+TEST_CASE("radix/geometry::Aabb intersect")
 {
     CHECK(intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{0, 0}, {1, 1}}));
     CHECK(intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-1, -1}, {2, 2}}));
@@ -59,7 +59,7 @@ TEST_CASE("sherpa/geometry::Aabb intersect")
     CHECK(!intersect(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}, geometry::Aabb<3, double>{{-0.5, -0.5, 1.5}, {0.5, 2.0, 3.0}}));
 }
 
-TEST_CASE("sherpa/geometry::Aabb::contains")
+TEST_CASE("radix/geometry::Aabb::contains")
 {
     CHECK(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}.contains({0.5, 0.5, 0.5}));
     CHECK(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}.contains({0.0, 0.0, 0.0}));
@@ -67,8 +67,7 @@ TEST_CASE("sherpa/geometry::Aabb::contains")
     CHECK(!geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}.contains({1.5, 0.5, 0.5}));
 }
 
-
-TEST_CASE("sherpa/geometry")
+TEST_CASE("radix/geometry")
 {
     SECTION("aabb")
     {

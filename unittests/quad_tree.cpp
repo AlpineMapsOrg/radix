@@ -16,9 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-#include "quad_tree.h"
-
 #include <catch2/catch_test_macros.hpp>
+#include <radix/quad_tree.h>
 
 namespace {
 struct DeletionChecker {
@@ -40,7 +39,7 @@ struct DeletionChecker {
 unsigned DeletionChecker::counter = 0;
 }
 
-TEST_CASE("sherpa/quad_tree")
+TEST_CASE("radix/quad_tree")
 {
     SECTION("construction and basics")
     {
@@ -284,7 +283,7 @@ TEST_CASE("sherpa/quad_tree")
     }
 }
 
-TEST_CASE("sherpa/quad_tree: on the fly traverse")
+TEST_CASE("radix/quad_tree: on the fly traverse")
 {
 
     const auto refine_predicate = [](const auto& node_value) {

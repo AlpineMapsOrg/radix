@@ -16,14 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-#include "iterator.h"
+#include <radix/iterator.h>
 
 #include <unordered_set>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
 
-TEST_CASE("sherpa/iterator: unordered_inserter")
+TEST_CASE("radix/iterator: unordered_inserter")
 {
     std::unordered_set<int> set;
     std::vector<int> l = { 0, 1, 2, 3, 4, 5 };

@@ -21,10 +21,10 @@
 #include <catch2/benchmark/catch_benchmark.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-#include "TileHeights.h"
-#include "quad_tree.h"
+#include <radix/TileHeights.h>
+#include <radix/quad_tree.h>
 
-TEST_CASE("sherpa/TileHeights emplace and query")
+TEST_CASE("radix/TileHeights emplace and query")
 {
     TileHeights d;
     SECTION("basic in and out")
@@ -76,7 +76,7 @@ TEST_CASE("sherpa/TileHeights emplace and query")
         }
     }
 }
-TEST_CASE("sherpa/TileHeights query performance")
+TEST_CASE("radix/TileHeights query performance")
 {
     TileHeights tile_heights;
     std::vector<tile::Id> ids;
@@ -105,7 +105,7 @@ TEST_CASE("sherpa/TileHeights query performance")
     };
 }
 
-TEST_CASE("sherpa/TileHeights serialisation")
+TEST_CASE("radix/TileHeights serialisation")
 {
     TileHeights d1;
     d1.emplace(tile::Id { 0, { 0, 0 } }, { 0.f, 100.f });
@@ -132,7 +132,7 @@ TEST_CASE("sherpa/TileHeights serialisation")
     }
 }
 
-TEST_CASE("sherpa/TileHeights io")
+TEST_CASE("radix/TileHeights io")
 {
     const auto base_path = std::filesystem::path("./unittest_tile_heights");
     constexpr auto file_name = "height_data.atb";

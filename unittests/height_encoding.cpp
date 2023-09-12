@@ -16,11 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
-#include "height_encoding.h"
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <radix/height_encoding.h>
 
-TEST_CASE("sherpa/height encoding float to rgb")
+TEST_CASE("radix/height encoding float to rgb")
 {
     using namespace sherpa::height_encoding;
     const auto one_red = 32.0f;
@@ -54,7 +54,7 @@ TEST_CASE("sherpa/height encoding float to rgb")
     CHECK(to_rgb(141 * one_red + 1 * one_green + eps) == glm::u8vec3(141, 1, 0));
 }
 
-TEST_CASE("sherpa/height encoding round trip")
+TEST_CASE("radix/height encoding round trip")
 {
     using namespace sherpa::height_encoding;
 
