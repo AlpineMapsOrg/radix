@@ -14,7 +14,12 @@ endif()
 
 include(FetchContent)
 if(NOT TARGET glm::glm)
-    FetchContent_Declare(glm URL https://github.com/g-truc/glm/archive/refs/heads/master.zip)
+    FetchContent_Declare(
+        glm
+        URL         https://github.com/g-truc/glm/archive/47585fde0c49fa77a2bf2fb1d2ead06999fd4b6e.zip
+        URL_HASH    MD5=9398fb57cb21135601e7ca0163682e78
+        SOURCE_DIR  ${CMAKE_SOURCE_DIR}/3rdparty/glm
+    )
     FetchContent_MakeAvailable(glm)
 endif()
 
