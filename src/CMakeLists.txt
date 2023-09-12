@@ -27,10 +27,6 @@ add_library(radix
     radix/tile.h
     radix/TileHeights.h radix/TileHeights.cpp
     radix/height_encoding.h)
-
-target_include_directories(radix
-    PRIVATE .
-)
 target_link_libraries(radix PUBLIC glm::glm)
 target_compile_features(radix PUBLIC cxx_std_20)
 target_compile_definitions(radix PUBLIC GLM_FORCE_XYZW_ONLY GLM_ENABLE_EXPERIMENTAL)
