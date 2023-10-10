@@ -53,10 +53,26 @@ public:
     }
     [[nodiscard]] glm::vec<n_dims, T> centre() const { return min + size() * T(0.5); }
 };
-using Aabb2d = Aabb<2, double>;
-using Aabb2f = Aabb<2, float>;
-using Aabb2i = Aabb<2, int>;
-using Aabb2i64 = Aabb<2, glm::int64>;
+
+template <class T>
+class Aabb2 : public Aabb<2, T> {
+    using Base = Aabb<2, T>;
+    using Vec = glm::vec<2, T>;
+public:
+    using Base::min;
+    using Base::max;
+    Aabb2() = default;
+    Aabb2(const Vec& min, const Vec& max) : Base{min, max} {}
+    Aabb2(const geometry::Aabb<3, T>& other) : Base{Vec(other.min), Vec(other.max)} {}
+
+    [[nodiscard]] T width() const { return max.x - min.x; }
+    [[nodiscard]] T height() const { return max.y - min.y; }
+};
+
+using Aabb2d = Aabb2<double>;
+using Aabb2f = Aabb2<float>;
+using Aabb2i = Aabb2<int>;
+using Aabb2i64 = Aabb2<glm::int64>;
 
 
 using Aabb3d = Aabb<3, double>;

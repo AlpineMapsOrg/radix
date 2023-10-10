@@ -30,22 +30,7 @@
 #include "hasher.h"
 
 namespace tile {
-
-template <class T>
-class Aabb2 : public geometry::Aabb<2, T> {
-    using Base = geometry::Aabb<2, T>;
-    using Vec = glm::vec<2, T>;
-public:
-    using Base::min;
-    using Base::max;
-    Aabb2() = default;
-    Aabb2(const Vec& min, const Vec& max) : Base{min, max} {}
-    Aabb2(const geometry::Aabb<3, T>& other) : Base{Vec(other.min), Vec(other.max)} {}
-
-    [[nodiscard]] T width() const { return max.x - min.x; }
-    [[nodiscard]] T height() const { return max.y - min.y; }
-};
-using SrsBounds = Aabb2<double>;
+using SrsBounds = geometry::Aabb2<double>;
 using SrsAndHeightBounds = geometry::Aabb<3, double>;
 
 enum class Border {
