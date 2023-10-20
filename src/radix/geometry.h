@@ -51,7 +51,22 @@ public:
     {
         return glm::all(glm::lessThanEqual(min, point)) && glm::all(glm::greaterThan(max, point));
     }
+    [[nodiscard]] bool contains_inclusive(const Vec &point) const {
+        return glm::all(glm::lessThanEqual(min, point)) && glm::all(glm::greaterThanEqual(max, point));
+    }
+    [[nodiscard]] bool contains_exclusive(const Vec &point) const {
+        return glm::all(glm::lessThan(min, point)) && glm::all(glm::greaterThan(max, point));
+    }
     [[nodiscard]] glm::vec<n_dims, T> centre() const { return min + size() * T(0.5); }
+
+    void expand_by(const Vec &point) {
+        this->min = glm::min(this->min, point);
+        this->max = glm::min(this->max, point);
+    }
+    void expand_by(const Aabb<n_dims, T> &other) {
+        this->min = glm::min(this->min, other.min);
+        this->max = glm::min(this->max, other.max);
+    }
 };
 
 template <class T>
