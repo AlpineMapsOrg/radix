@@ -61,11 +61,11 @@ public:
 
     void expand_by(const Vec &point) {
         this->min = glm::min(this->min, point);
-        this->max = glm::min(this->max, point);
+        this->max = glm::max(this->max, point);
     }
     void expand_by(const Aabb<n_dims, T> &other) {
         this->min = glm::min(this->min, other.min);
-        this->max = glm::min(this->max, other.max);
+        this->max = glm::max(this->max, other.max);
     }
 };
 
