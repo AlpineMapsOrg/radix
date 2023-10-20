@@ -72,12 +72,14 @@ public:
 using Aabb2d = Aabb2<double>;
 using Aabb2f = Aabb2<float>;
 using Aabb2i = Aabb2<int>;
+using Aabb2ui = Aabb2<unsigned int>;
 using Aabb2i64 = Aabb2<glm::int64>;
 
 
 using Aabb3d = Aabb<3, double>;
 using Aabb3f = Aabb<3, float>;
 using Aabb3i = Aabb<3, int>;
+using Aabb3ui = Aabb<3, unsigned int>;
 using Aabb3i64 = Aabb<3, glm::int64>;
 
 
