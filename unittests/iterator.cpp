@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Alpine Renderer
+ * Alpine Radix
  * Copyright (C) 2022 Adam Celarek
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@ TEST_CASE("radix/iterator: unordered_inserter")
 {
     std::unordered_set<int> set;
     std::vector<int> l = { 0, 1, 2, 3, 4, 5 };
-    std::copy(l.begin(), l.end(), sherpa::unordered_inserter(set));
+    std::copy(l.begin(), l.end(), radix::unordered_inserter(set));
     CHECK(set.size() == 6);
     CHECK(set.contains(0));
     CHECK(set.contains(1));

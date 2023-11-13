@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Alpine Sherpa
+ * Alpine Radix
  * Copyright (C) 2022 Adam Celarek <last name at cg dot tuwien dot ac dot at>
  *
  * This program is free software: you can redistribute it and/or modify

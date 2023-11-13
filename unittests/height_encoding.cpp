@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Alpine Terrain Renderer
+ * Alpine Radix
  * Copyright (C) 2023 Adam Celarek
  *
  * This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@
 
 TEST_CASE("radix/height encoding float to rgb")
 {
-    using namespace sherpa::height_encoding;
+    using namespace radix::height_encoding;
     const auto one_red = 32.0f;
     const auto one_green = 32.000000001f / 256;
     const auto eps = 0.000000001f;
@@ -56,7 +56,7 @@ TEST_CASE("radix/height encoding float to rgb")
 
 TEST_CASE("radix/height encoding round trip")
 {
-    using namespace sherpa::height_encoding;
+    using namespace radix::height_encoding;
 
     const auto test_cases = std::vector({
         0.0f,

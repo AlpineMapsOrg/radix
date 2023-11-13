@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Alpine Terrain Builder
+ * Alpine Radix
  * Copyright (C) 2022 Adam Celarek
  *
  * This program is free software: you can redistribute it and/or modify

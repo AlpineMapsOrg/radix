@@ -22,7 +22,7 @@
 #include <cmath>
 #include <glm/glm.hpp>
 
-namespace sherpa::height_encoding {
+namespace radix::height_encoding {
 
 constexpr float min_height = 0.f;
 constexpr float max_height = 8191.875f;
@@ -45,4 +45,4 @@ inline float to_float(glm::u8vec3 v)
     return float(v.x << 8 | v.y) * scaling_factor + min_height;
 }
 
-} // namespace sherpa::height_encoding
+} // namespace radix::height_encoding

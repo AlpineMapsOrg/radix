@@ -20,7 +20,7 @@
 
 #include <iterator>
 
-namespace sherpa {
+namespace radix {
 
 // from https://stackoverflow.com/questions/27429705/std-insert-iterator-for-unordered-sets-or-maps
 template <typename Container>
