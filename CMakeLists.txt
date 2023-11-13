@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.24)
-
 project(radix)
 
 option(ALP_UNITTESTS "include unit test targets in the buildsystem" ON)

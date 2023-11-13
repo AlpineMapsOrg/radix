@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(radix_unittests)
+project(radix_unittests LANGUAGES CXX)
 
 include(FetchContent)
 FetchContent_Declare(catch2
