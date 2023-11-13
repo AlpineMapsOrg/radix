@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.24)
 project(radix_unittests)
 
+message("###################ALP_EXTERN_DIR = ${ALP_EXTERN_DIR}")
+
 include(FetchContent)
 FetchContent_Declare(catch2
     DOWNLOAD_EXTRACT_TIMESTAMP true
     URL             https://github.com/catchorg/Catch2/archive/refs/tags/v3.4.0.tar.gz
     URL_HASH        MD5=2c802a4938ed842e2942c60d1d231bb7
-    SOURCE_DIR      ${CMAKE_SOURCE_DIR}/${ALP_EXTERN_DIR}/Catch2
+    SOURCE_DIR      ${CMAKE_SOURCE_DIR}/extern/Catch2
 )
 FetchContent_MakeAvailable(catch2)
 
