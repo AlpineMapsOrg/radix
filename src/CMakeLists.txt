@@ -12,14 +12,12 @@ if (UNIX AND NOT EMSCRIPTEN AND NOT ANDROID)
         if it's not installed, you'll get errors, that openmp or other stuff is not installed (hard to track down)" OFF)
 endif()
 
-message("###################ALP_EXTERN_DIR = ${ALP_EXTERN_DIR}")
-
 include(FetchContent)
 FetchContent_Declare(glm
     DOWNLOAD_EXTRACT_TIMESTAMP true
     URL             https://github.com/g-truc/glm/archive/47585fde0c49fa77a2bf2fb1d2ead06999fd4b6e.zip
     URL_HASH        MD5=9398fb57cb21135601e7ca0163682e78
-    SOURCE_DIR      ${CMAKE_SOURCE_DIR}/extern/glm
+    SOURCE_DIR      ${CMAKE_SOURCE_DIR}/${ALP_EXTERN_DIR}/glm
 )
 FetchContent_MakeAvailable(glm)
 
