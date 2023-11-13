@@ -33,7 +33,7 @@ inline glm::u8vec3 to_rgb(float height)
     height -= min_height;
     constexpr float scaling_factor = 65535.f / (max_height - min_height);
 
-    const auto scaled = uint(std::lround(height * scaling_factor));
+    const auto scaled = unsigned(std::lround(height * scaling_factor));
     const auto r = (scaled >> 8u) & 255u;
     const auto g = scaled & 255u;
     return {glm::u8(r), glm::u8(g), 0};
