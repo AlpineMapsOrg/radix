@@ -1,5 +1,5 @@
 #############################################################################
-# Alpine Terrain Renderer
+# Alpine Radix
 # Copyright (C) 2023 Adam Celarek <family name at cg tuwien ac at>
 #
 # This program is free software: you can redistribute it and/or modify
