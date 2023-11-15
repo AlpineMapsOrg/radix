@@ -1,5 +1,28 @@
+#############################################################################
+# Alpine Terrain Renderer
+# Copyright (C) 2023 Adam Celarek <family name at cg tuwien ac at>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#############################################################################
+
 find_package(Git 2.22 REQUIRED)
 
+# CMake's FetchContent caches information about the downloads / clones in the build dir.
+# Therefore it walks over the clones every time we switch the build type (release, debug, webassembly, android etc),
+# which takes forever. Moreover, it messes up changes to subprojects. This function, on the other hand, checks whether
+# we are on a branch and in that case only issues a warning. Use origin/main or similar, if you want to stay up-to-date
+# with upstream.
 
 function(alp_add_git_repository name)
     set(options DO_NOT_ADD_SUBPROJECT)
