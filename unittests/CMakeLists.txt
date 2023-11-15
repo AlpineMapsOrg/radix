@@ -19,14 +19,9 @@
 cmake_minimum_required(VERSION 3.24)
 project(radix_unittests LANGUAGES CXX)
 
-include(FetchContent)
-FetchContent_Declare(catch2
-    DOWNLOAD_EXTRACT_TIMESTAMP true
-    URL             https://github.com/catchorg/Catch2/archive/refs/tags/v3.4.0.tar.gz
-    URL_HASH        MD5=2c802a4938ed842e2942c60d1d231bb7
-    SOURCE_DIR      ${CMAKE_SOURCE_DIR}/${ALP_EXTERN_DIR}/Catch2
-)
-FetchContent_MakeAvailable(catch2)
+if (NOT TARGET Catch2)
+    alp_add_git_repository(catch2 URL https://github.com/catchorg/Catch2.git COMMITISH v3.4.0)
+endif()
 
 set(RADIX_UNITTESTS_SOURCES
     geometry.cpp
