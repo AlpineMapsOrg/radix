@@ -39,21 +39,21 @@ public:
     [[nodiscard]] unordered_insert_iterator& operator*() { return *this; } // no-op
     constexpr unordered_insert_iterator& operator=(const typename Container::value_type& value)
     {
-        container.insert(value);
+        container->insert(value);
         return *this;
     }
     constexpr unordered_insert_iterator& operator=(typename Container::value_type&& value)
     {
-        container.insert(std::move(value));
+        container->insert(std::move(value));
         return *this;
     }
     unordered_insert_iterator(Container& container)
-        : container(container)
+        : container(&container)
     {
     }
 
 private:
-    Container& container;
+    Container* container;
 };
 
 template <typename Container>
