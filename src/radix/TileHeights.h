@@ -48,7 +48,8 @@ public:
     template <typename VectorOfBytes>
     [[nodiscard]] static TileHeights deserialise(const VectorOfBytes& bytes)
     {
-        uint64_t size = -1;
+        using vector_size_t = decltype(bytes.size());
+        auto size = uint64_t(-1);
         std::copy_n(reinterpret_cast<const std::byte*>(bytes.data()), sizeof(size), reinterpret_cast<std::byte*>(&size));
         if (size > uint64_t(1024 * 1024 * 50))
             return {};
@@ -57,10 +58,10 @@ public:
         std::vector<std::pair<glm::uvec3, ValueType>> vector_data;
         const auto data_size_in_bytes = size * sizeof(decltype(vector_data.front()));
 
-        if (bytes.size() != sizeof(size) + data_size_in_bytes)
+        if (size_t(bytes.size()) != sizeof(size) + data_size_in_bytes)
             return {};
 
-        vector_data.resize(size);
+        vector_data.resize(vector_size_t(size));
         std::copy_n(reinterpret_cast<const std::byte*>(bytes.data()) + sizeof(size), data_size_in_bytes, reinterpret_cast<std::byte*>(vector_data.data()));
 
         TileHeights new_heights;

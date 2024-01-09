@@ -156,7 +156,7 @@ TEST_CASE("radix/quad_tree")
         const auto refine_predicate = [](const auto& node_value) {
             return node_value > 0;
         };
-        const auto generate_children_function = [](const auto& node_value) {
+        const auto generate_children_function = [](const auto&) {
             return std::array<int, 4>({ 0, 0, 0, 0 });
         };
         quad_tree::refine(&root, refine_predicate, generate_children_function);
@@ -285,12 +285,6 @@ TEST_CASE("radix/quad_tree")
 
 TEST_CASE("radix/quad_tree: on the fly traverse")
 {
-
-    const auto refine_predicate = [](const auto& node_value) {
-        if (node_value <= 0)
-            return false;
-        return true;
-    };
     const auto generate_children_function = [](const auto& node_value) {
         const auto t = node_value / 4;
         const auto t2 = node_value % 4 - 1;
