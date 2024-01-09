@@ -63,6 +63,11 @@ if (ALP_ENABLE_ADDRESS_SANITIZER)
         target_link_options(radix PUBLIC -fno-omit-frame-pointer -fsanitize=address)
     endif()
 endif()
+
+if (MSVC)
+    target_compile_options(radix PUBLIC /W4 #[[/WX]])
+else()
+    target_compile_options(radix PUBLIC -Wall -Wextra -pedantic#[[ -Werror]])
 endif()
 
 if (ALP_USE_LLVM_LINKER)
