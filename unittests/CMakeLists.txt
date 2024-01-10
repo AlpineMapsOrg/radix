@@ -19,7 +19,7 @@
 project(radix_unittests LANGUAGES CXX)
 
 if (NOT TARGET Catch2)
-    alp_add_git_repository(catch2 URL https://github.com/catchorg/Catch2.git COMMITISH v3.4.0)
+    alp_add_git_repository(catch2 URL https://github.com/catchorg/Catch2.git COMMITISH v3.5.1)
 endif()
 
 set(RADIX_UNITTESTS_SOURCES
