@@ -45,6 +45,7 @@ target_link_libraries(unittests_radix PUBLIC radix Catch2::Catch2)
 
 if (EMSCRIPTEN)
     set_target_properties(unittests_radix PROPERTIES SUFFIX ".html")
+    target_compile_options(unittests_radix PUBLIC -sASSERTIONS -sALLOW_MEMORY_GROWTH -sINITIAL_MEMORY=104857600)
     set(ALP_INSTALL_FILES
         "$<TARGET_FILE_DIR:unittests_radix>/unittests_radix.js"
         "$<TARGET_FILE_DIR:unittests_radix>/unittests_radix.wasm"
