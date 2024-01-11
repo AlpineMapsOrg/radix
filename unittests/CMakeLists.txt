@@ -43,6 +43,17 @@ else()
 endif()
 target_link_libraries(unittests_radix PUBLIC radix Catch2::Catch2)
 
+if (ALP_ENABLE_ADDRESS_SANITIZER)
+    message(NOTICE "building with address sanitizer enabled")
+    if(MSVC)
+        target_compile_options (unittests_radix PUBLIC /fsanitize=address)
+    else()
+        target_compile_options(unittests_radix PUBLIC -fno-omit-frame-pointer -fsanitize=address)
+        target_link_options(unittests_radix PUBLIC -fno-omit-frame-pointer -fsanitize=address)
+    endif()
+endif()
+
+
 if (EMSCRIPTEN)
     set_target_properties(unittests_radix PROPERTIES SUFFIX ".html")
     target_compile_options(unittests_radix PUBLIC -sASSERTIONS -sALLOW_MEMORY_GROWTH -sINITIAL_MEMORY=104857600)
