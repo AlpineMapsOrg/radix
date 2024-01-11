@@ -49,7 +49,7 @@ target_compile_features(radix PUBLIC cxx_std_20)
 target_compile_definitions(radix PUBLIC GLM_FORCE_XYZW_ONLY GLM_ENABLE_EXPERIMENTAL)
 
 if (ALP_ENABLE_ASSERTS)
-    target_compile_options(radix PUBLIC "-U NDEBUG")
+    target_compile_options(radix PUBLIC -UNDEBUG)
     target_compile_definitions(radix PUBLIC TNTN_ASSERT_ACTIVE)
 endif()
 
