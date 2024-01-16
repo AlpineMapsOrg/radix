@@ -32,7 +32,7 @@ endif()
 include(../cmake/alp_add_git_repository.cmake)
 
 if (NOT TARGET glm::glm)
-    alp_add_git_repository(glm URL https://github.com/g-truc/glm.git COMMITISH origin/master)
+    alp_add_git_repository(glm URL https://github.com/g-truc/glm.git COMMITISH b06b775c1c80af51a1183c0e167f9de3b2351a79)
 endif()
 
 add_library(radix
