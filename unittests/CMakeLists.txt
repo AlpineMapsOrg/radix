@@ -32,16 +32,14 @@ set(RADIX_UNITTESTS_SOURCES
     height_encoding.cpp
 )
 if (ANDROID)
-    qt_add_executable(unittests_radix ${RADIX_UNITTESTS_SOURCES})
-    target_link_libraries(unittests_radix PUBLIC Qt::Core Qt::Gui)
-    install(TARGETS unittests_radix
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    )
+    alp_add_git_repository(qml_catch2_console URL https://github.com/AlpineMapsOrg/qml_catch2_console.git COMMITISH v24.01.17 DO_NOT_ADD_SUBPROJECT)
+    include(${qml_catch2_console_SOURCE_DIR}/src/qml_catch2_console.cmake)
+    add_qml_catch2_console_unittests(unittests_radix ${RADIX_UNITTESTS_SOURCES})
+    target_link_libraries(unittests_radix PUBLIC radix)
 else()
     add_executable(unittests_radix ${RADIX_UNITTESTS_SOURCES})
+    target_link_libraries(unittests_radix PUBLIC radix Catch2::Catch2WithMain)
 endif()
-target_link_libraries(unittests_radix PUBLIC radix Catch2::Catch2)
 
 if (EMSCRIPTEN)
     set_target_properties(unittests_radix PROPERTIES SUFFIX ".html")
