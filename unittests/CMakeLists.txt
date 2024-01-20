@@ -32,7 +32,7 @@ set(RADIX_UNITTESTS_SOURCES
     height_encoding.cpp
 )
 if (ANDROID)
-    alp_add_git_repository(qml_catch2_console URL https://github.com/AlpineMapsOrg/qml_catch2_console.git COMMITISH v24.01.17 DO_NOT_ADD_SUBPROJECT)
+    alp_add_git_repository(qml_catch2_console URL https://github.com/AlpineMapsOrg/qml_catch2_console.git COMMITISH v24.01.20 DO_NOT_ADD_SUBPROJECT)
     include(${qml_catch2_console_SOURCE_DIR}/src/qml_catch2_console.cmake)
     add_qml_catch2_console_unittests(unittests_radix ${RADIX_UNITTESTS_SOURCES})
     target_link_libraries(unittests_radix PUBLIC radix)
