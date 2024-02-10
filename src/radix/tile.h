@@ -48,7 +48,7 @@ enum class Scheme {
 
 struct Id {
     unsigned zoom_level = unsigned(-1);
-    glm::uvec2 coords;
+    glm::uvec2 coords = {};
     Scheme scheme = Scheme::Tms;
 
     [[nodiscard]] Id to(Scheme new_scheme) const
@@ -70,8 +70,12 @@ struct Id {
             Id { zoom_level + 1, coords * 2u + glm::uvec2(1, scheme == Scheme::Tms), scheme }
         };
     }
-    bool operator==(const Id& other) const { return other.coords == coords && other.scheme == scheme && other.zoom_level == zoom_level; }
-    bool operator<(const Id& other) const { return std::tie(zoom_level, coords.x, coords.y, scheme) < std::tie(other.zoom_level, other.coords.x, other.coords.y, other.scheme); }
+    bool operator==(const Id& other) const = default;
+    bool operator<(const Id& other) const
+    {
+        assert(other.scheme == scheme);
+        return std::tie(zoom_level, coords.x, coords.y, scheme) < std::tie(other.zoom_level, other.coords.x, other.coords.y, other.scheme);
+    }
     operator std::tuple<unsigned, unsigned, unsigned, unsigned>() const
     {
         return std::make_tuple(zoom_level, coords.x, coords.y, unsigned(scheme));
