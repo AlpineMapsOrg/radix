@@ -41,8 +41,8 @@ class Aabb {
     using Vec = glm::vec<n_dims, T>;
 
 public:
-    Vec min = {};
-    Vec max = {};
+    Vec min = Vec(std::numeric_limits<T>::max());
+    Vec max = Vec(std::numeric_limits<T>::min());
 
     bool operator==(const Aabb<n_dims, T>& other) const = default;
 
