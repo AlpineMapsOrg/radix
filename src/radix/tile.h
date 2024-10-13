@@ -19,15 +19,14 @@
 
 #pragma once
 
+#include "geometry.h"
+#include "hasher.h"
+#include <glm/glm.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <glm/vector_relational.hpp>
 #include <iostream>
 #include <tuple>
-
-#include <glm/glm.hpp>
-#include <glm/vector_relational.hpp>
-
-#include "geometry.h"
-#include "glm/gtx/string_cast.hpp"
-#include "hasher.h"
+#include <unordered_set>
 
 namespace tile {
 using SrsBounds = geometry::Aabb2<double>;
@@ -79,6 +78,9 @@ struct Id {
 
     using Hasher = typename hasher::for_tuple<unsigned, unsigned, unsigned, unsigned>;
 };
+
+using IdSet = std::unordered_set<tile::Id, tile::Id::Hasher>;
+template <typename T> using IdMap = std::unordered_map<tile::Id, T, tile::Id::Hasher>;
 
 // helper for catch2
 inline std::ostream& operator<<(std::ostream& os, const Id& value)
