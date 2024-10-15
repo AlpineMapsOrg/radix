@@ -86,6 +86,20 @@ struct Id {
 using IdSet = std::unordered_set<tile::Id, tile::Id::Hasher>;
 template <typename T> using IdMap = std::unordered_map<tile::Id, T, tile::Id::Hasher>;
 
+inline std::string to_string(const Id& value)
+{
+    std::string scheme;
+    switch (value.scheme) {
+    case Scheme::Tms:
+        scheme = "Tms";
+        break;
+    case Scheme::SlippyMap:
+        scheme = "SlippyMap";
+        break;
+    }
+    return scheme + ":" + std::to_string(value.zoom_level) + "/" + std::to_string(value.coords.x) + "/" + std::to_string(value.coords.y);
+}
+
 // helper for catch2
 inline std::ostream& operator<<(std::ostream& os, const Id& value)
 {
