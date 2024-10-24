@@ -21,7 +21,7 @@
 #include <functional>
 #include <tuple>
 
-namespace hasher {
+namespace radix::hasher {
 
 // Code from boost
 // Reciprocal of the golden ratio helps spread entropy
@@ -62,4 +62,4 @@ struct for_tuple {
     }
 };
 
-}
+} // namespace radix::hasher

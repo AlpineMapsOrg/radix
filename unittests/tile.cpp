@@ -20,6 +20,8 @@
 
 #include <radix/tile.h>
 
+using namespace radix;
+
 TEST_CASE("radix/tile::Id scheme conversion")
 {
     SECTION("tms -> slippy map")

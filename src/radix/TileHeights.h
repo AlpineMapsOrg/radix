@@ -26,6 +26,7 @@
 #include "hasher.h"
 #include "tile.h"
 
+namespace radix {
 class TileHeights {
 public:
     //    using KeyType = std::tuple<unsigned, unsigned, unsigned>;
@@ -74,3 +75,5 @@ public:
         return new_heights;
     }
 };
+
+} // namespace radix

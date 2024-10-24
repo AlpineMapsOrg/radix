@@ -32,7 +32,7 @@ using std::size_t;
 // also, it's likely possible to do things in a way, that is better for cpu caches. this is also something that is not done.
 // As many developers learned, such optimisations should be done after profiling, and right now it's more important to finish it.
 
-namespace quad_tree {
+namespace radix::quad_tree {
 template <typename DataType>
 class Node {
     using QuadTreeNodePtr = std::unique_ptr<Node>;
@@ -211,4 +211,4 @@ const Node<DataType>& Node<DataType>::operator[](unsigned index) const
     return *m_children[index];
 }
 
-}
+} // namespace radix::quad_tree

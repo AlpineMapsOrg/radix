@@ -22,6 +22,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 using Catch::Approx;
+using namespace radix;
 
 namespace {
 template <int n_dims>

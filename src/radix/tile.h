@@ -28,7 +28,7 @@
 #include <tuple>
 #include <unordered_set>
 
-namespace tile {
+namespace radix::tile {
 using SrsBounds = geometry::Aabb2<double>;
 using SrsAndHeightBounds = geometry::Aabb<3, double>;
 
@@ -133,4 +133,4 @@ struct Descriptor {
     unsigned tileSize = unsigned(-1);
 };
 
-}
+} // namespace radix::tile

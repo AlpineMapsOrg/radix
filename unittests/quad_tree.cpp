@@ -19,6 +19,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <radix/quad_tree.h>
 
+using namespace radix;
+
 namespace {
 struct DeletionChecker {
     static unsigned counter;

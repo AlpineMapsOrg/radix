@@ -27,7 +27,7 @@
 
 #include <glm/glm.hpp>
 
-namespace geometry {
+namespace radix::geometry {
 
 template <typename T = double>
     requires std::is_floating_point_v<T>
@@ -355,4 +355,4 @@ std::array<glm::vec<3, T>, 8> corners(const Aabb<3, T> &box)
 
     return {a, b, c, d, e, f, g, h};
 }
-}
+} // namespace radix::geometry

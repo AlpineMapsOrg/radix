@@ -22,7 +22,7 @@
 #include "TileHeights.h"
 
 namespace {
-TileHeights::KeyType key(const tile::Id& tile_id)
+radix::TileHeights::KeyType key(const radix::tile::Id& tile_id)
 {
     //    const auto id = tile_id.to(tile::Scheme::Tms);
     //    return std::make_tuple(id.zoom_level, id.coords.x, id.coords.y);
@@ -35,7 +35,7 @@ TileHeights::KeyType key(const tile::Id& tile_id)
     return key;
 }
 
-tile::Id decode_key(TileHeights::KeyType key)
+radix::tile::Id decode_key(radix::TileHeights::KeyType key)
 {
     //    return { std::get<0>(key), { std::get<1>(key), std::get<2>(key) } };
 
@@ -48,6 +48,7 @@ tile::Id decode_key(TileHeights::KeyType key)
 }
 }
 
+namespace radix {
 TileHeights::TileHeights() = default;
 
 void TileHeights::emplace(const tile::Id& tile_id, const std::pair<float, float>& min_max)
@@ -119,3 +120,4 @@ std::vector<std::byte> TileHeights::serialise() const
     std::copy_n(reinterpret_cast<std::byte*>(vector_data.data()), data_size_in_bytes, std::back_inserter(bytes));
     return bytes;
 }
+} // namespace radix

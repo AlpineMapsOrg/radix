@@ -20,6 +20,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <radix/height_encoding.h>
 
+using namespace radix;
+
 TEST_CASE("radix/height encoding float to rgb")
 {
     using namespace radix::height_encoding;
