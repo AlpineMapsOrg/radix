@@ -46,7 +46,7 @@ function(alp_add_git_repository name)
             WORKING_DIRECTORY ${repo_dir}
             RESULT_VARIABLE GIT_FETCH_RESULT)
         if (NOT ${GIT_FETCH_RESULT})
-            message(STATUS "Fetching ${name} was successfull.")
+            message(STATUS "Fetching ${name} was successful.")
 
             execute_process(COMMAND ${GIT_EXECUTABLE} branch --show-current
                 WORKING_DIRECTORY ${repo_dir}
@@ -54,23 +54,23 @@ function(alp_add_git_repository name)
                 OUTPUT_STRIP_TRAILING_WHITESPACE
                 OUTPUT_VARIABLE GIT_BRANCH_OUTPUT)
             if (${GIT_BRANCH_RESULT})
-                message(FATAL_ERROR "${repo_dir}: git branch --show-current not successfull")
+                message(FATAL_ERROR "${repo_dir}: git branch --show-current not successful")
             endif()
             if (GIT_BRANCH_OUTPUT STREQUAL "")
                 execute_process(COMMAND ${GIT_EXECUTABLE} checkout --quiet ${PARAM_COMMITISH}
                     WORKING_DIRECTORY ${repo_dir}
                     RESULT_VARIABLE GIT_CHECKOUT_RESULT)
                 if (NOT ${GIT_CHECKOUT_RESULT})
-                    message(STATUS "In ${name}, checking out ${PARAM_COMMITISH} was successfull.")
+                    message(STATUS "In ${name}, checking out ${PARAM_COMMITISH} was successful.")
                 else()
-                    message(FATAL_ERROR "In ${name}, checking out ${PARAM_COMMITISH} was NOT successfull!")
+                    message(FATAL_ERROR "In ${name}, checking out ${PARAM_COMMITISH} was NOT successful!")
                 endif()
             else()
                 message(WARNING "${short_repo_dir} is on branch ${GIT_BRANCH_OUTPUT}, leaving it there. "
                     "NOT checking out ${PARAM_COMMITISH}! Use origin/main or similar if you want to stay up-to-date with upstream.")
             endif()
         else()
-            message(WARNING "Fetching ${name} was NOT successfull!")
+            message(WARNING "Fetching ${name} was NOT successful!")
         endif()
     else()
         message(STATUS "Clonging ${PARAM_URL} to ${short_repo_dir}.")
@@ -81,12 +81,12 @@ function(alp_add_git_repository name)
                 WORKING_DIRECTORY ${repo_dir}
                 RESULT_VARIABLE GIT_CHECKOUT_RESULT)
             if (NOT ${GIT_CHECKOUT_RESULT})
-                message(STATUS "Checking out ${PARAM_COMMITISH} was successfull.")
+                message(STATUS "Checking out ${PARAM_COMMITISH} was successful.")
             else()
-                message(FATAL_ERROR "In ${name}, checking out ${PARAM_COMMITISH} was NOT successfull!")
+                message(FATAL_ERROR "In ${name}, checking out ${PARAM_COMMITISH} was NOT successful!")
             endif()
         else()
-            message(FATAL_ERROR "Clonging ${name} was NOT successfull!")
+            message(FATAL_ERROR "Cloning ${name} was NOT successful!")
         endif()
     endif()
 
