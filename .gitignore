@@ -1,3 +1,4 @@
 /CMakeLists.txt.user
 /3rdparty/*
 /extern/*
+/build/*
