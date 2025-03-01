@@ -60,6 +60,7 @@ struct Id {
         return { zoom_level, { coords.x, coord_y }, new_scheme };
     }
     [[nodiscard]] Id parent() const { return { zoom_level - 1, coords / 2u, scheme }; }
+    /// returns the children in the order top left, top right, bottom left, bottom right
     [[nodiscard]] std::array<Id, 4> children() const
     {
         return {
@@ -82,6 +83,14 @@ struct Id {
 
     using Hasher = typename hasher::for_tuple<unsigned, unsigned, unsigned, unsigned>;
 };
+
+/// gives the index in the children array of the parent, i.e., in the order top left, top right, bottom left, bottom right
+inline unsigned child_index(const Id& id)
+{
+    const auto x_comp = id.coords.x % 2;
+    const auto y_comp = (id.coords.y % 2) ^ unsigned((id.scheme != Scheme::Tms));
+    return 2 * y_comp + x_comp;
+}
 
 using IdSet = std::unordered_set<tile::Id, tile::Id::Hasher>;
 template <typename T> using IdMap = std::unordered_map<tile::Id, T, tile::Id::Hasher>;
