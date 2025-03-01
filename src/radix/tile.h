@@ -45,6 +45,8 @@ enum class Scheme {
     SlippyMap // aka Google, XYZ, webmap tiles; northern most tile is y = 0
 };
 
+enum class QuadIndex : unsigned { TopLeft = 0, TopRight, BottomLeft, BottomRight };
+
 struct Id {
     unsigned zoom_level = unsigned(-1);
     glm::uvec2 coords = {};
@@ -85,11 +87,11 @@ struct Id {
 };
 
 /// gives the index in the children array of the parent, i.e., in the order top left, top right, bottom left, bottom right
-inline unsigned child_index(const Id& id)
+inline QuadIndex child_index(const Id& id)
 {
     const auto x_comp = id.coords.x % 2;
     const auto y_comp = (id.coords.y % 2) ^ unsigned((id.scheme != Scheme::Tms));
-    return 2 * y_comp + x_comp;
+    return QuadIndex(2 * y_comp + x_comp);
 }
 
 using IdSet = std::unordered_set<tile::Id, tile::Id::Hasher>;
