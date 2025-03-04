@@ -45,7 +45,7 @@ enum class Scheme {
     SlippyMap // aka Google, XYZ, webmap tiles; northern most tile is y = 0
 };
 
-enum class QuadIndex : unsigned { TopLeft = 0, TopRight, BottomLeft, BottomRight };
+enum class QuadPosition : unsigned { TopLeft = 0, TopRight, BottomLeft, BottomRight };
 
 struct Id {
     unsigned zoom_level = unsigned(-1);
@@ -62,15 +62,17 @@ struct Id {
         return { zoom_level, { coords.x, coord_y }, new_scheme };
     }
     [[nodiscard]] Id parent() const { return { zoom_level - 1, coords / 2u, scheme }; }
-    /// returns the children in the order top left, top right, bottom left, bottom right
+    /// returns the children in an unspecified order
     [[nodiscard]] std::array<Id, 4> children() const
     {
+        // clang-format off
         return {
-            Id { zoom_level + 1, coords * 2u + glm::uvec2(0, scheme != Scheme::Tms), scheme },
-            Id { zoom_level + 1, coords * 2u + glm::uvec2(1, scheme != Scheme::Tms), scheme },
-            Id { zoom_level + 1, coords * 2u + glm::uvec2(0, scheme == Scheme::Tms), scheme },
-            Id { zoom_level + 1, coords * 2u + glm::uvec2(1, scheme == Scheme::Tms), scheme }
+            Id { zoom_level + 1, coords * 2u + glm::uvec2(0, 0), scheme },
+            Id { zoom_level + 1, coords * 2u + glm::uvec2(1, 0), scheme },
+            Id { zoom_level + 1, coords * 2u + glm::uvec2(0, 1), scheme },
+            Id { zoom_level + 1, coords * 2u + glm::uvec2(1, 1), scheme }
         };
+        // clang-format on
     }
     bool operator==(const Id& other) const = default;
     bool operator<(const Id& other) const
@@ -87,11 +89,24 @@ struct Id {
 };
 
 /// gives the index in the children array of the parent, i.e., in the order top left, top right, bottom left, bottom right
-inline QuadIndex child_index(const Id& id)
+inline QuadPosition quad_position(const Id& id)
 {
     const auto x_comp = id.coords.x % 2;
-    const auto y_comp = (id.coords.y % 2) ^ unsigned((id.scheme != Scheme::Tms));
-    return QuadIndex(2 * y_comp + x_comp);
+
+    // scheme y_index on_bottom
+    //      0       0       = 1
+    //      0       1       = 0
+    //      1       0       = 0
+    //      1       1       = 1
+
+    const auto y_comp = unsigned(unsigned(id.scheme) == (id.coords.y % 2));
+    // enum class Scheme {
+    //     Tms, // southern most tile is y = 0
+    //     SlippyMap // aka Google, XYZ, webmap tiles; northern most tile is y = 0
+    // };
+    // enum class QuadIndex : unsigned { TopLeft = 0, TopRight, BottomLeft, BottomRight };
+
+    return QuadPosition(2 * y_comp + x_comp);
 }
 
 using IdSet = std::unordered_set<tile::Id, tile::Id::Hasher>;

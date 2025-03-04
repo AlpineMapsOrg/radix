@@ -58,7 +58,7 @@ TEST_CASE("radix/tile::Id scheme conversion")
     }
 }
 
-TEST_CASE("radix/tile::Id parent")
+TEST_CASE("radix/tile::Id/parent")
 {
     CHECK(tile::Id { 1, { 0, 1 } }.parent() == tile::Id { 0, { 0, 0 } });
     CHECK(tile::Id { 2, { 2, 1 } }.parent() == tile::Id { 1, { 1, 0 } });
@@ -66,37 +66,54 @@ TEST_CASE("radix/tile::Id parent")
     CHECK(tile::Id { 2, { 3, 3 } }.parent() == tile::Id { 1, { 1, 1 } });
 }
 
-TEST_CASE("radix/tile::Id, children")
+TEST_CASE("radix/tile::Id/children")
 {
+    SECTION("child index tms (y pointing up)")
+    {
+        CHECK(tile::quad_position({ 1, { 0, 0 } }) == tile::QuadPosition::BottomLeft);
+        CHECK(tile::quad_position({ 1, { 0, 1 } }) == tile::QuadPosition::TopLeft);
+        CHECK(tile::quad_position({ 1, { 1, 0 } }) == tile::QuadPosition::BottomRight);
+        CHECK(tile::quad_position({ 1, { 1, 1 } }) == tile::QuadPosition::TopRight);
+
+        CHECK(tile::quad_position({ 1, { 0, 0 }, tile::Scheme::Tms }) == tile::QuadPosition::BottomLeft);
+        CHECK(tile::quad_position({ 1, { 0, 1 }, tile::Scheme::Tms }) == tile::QuadPosition::TopLeft);
+        CHECK(tile::quad_position({ 1, { 1, 0 }, tile::Scheme::Tms }) == tile::QuadPosition::BottomRight);
+        CHECK(tile::quad_position({ 1, { 1, 1 }, tile::Scheme::Tms }) == tile::QuadPosition::TopRight);
+    }
+
+    SECTION("child index slippy map (y pointing down)")
+    {
+        CHECK(tile::quad_position({ 1, { 0, 1 }, tile::Scheme::SlippyMap }) == tile::QuadPosition::BottomLeft);
+        CHECK(tile::quad_position({ 1, { 0, 0 }, tile::Scheme::SlippyMap }) == tile::QuadPosition::TopLeft);
+        CHECK(tile::quad_position({ 1, { 1, 1 }, tile::Scheme::SlippyMap }) == tile::QuadPosition::BottomRight);
+        CHECK(tile::quad_position({ 1, { 1, 0 }, tile::Scheme::SlippyMap }) == tile::QuadPosition::TopRight);
+    }
+
+    const auto array_contains = [](const std::array<tile::Id, 4>& array, const tile::Id& id) {
+        for (const auto& e : array) {
+            if (e == id)
+                return true;
+        }
+        return false;
+    };
+
     SECTION("mercator tms (y point up)")
     {
         {
             const auto tiles = tile::Id{0, {0, 0}}.children();
             REQUIRE(tiles.size() == 4);
-            for (const auto& tid : tiles)
-                CHECK(tid.zoom_level == 1);
-            CHECK(tiles[0].coords == glm::uvec2 { 0, 0 });
-            CHECK(child_index(tiles[0]) == tile::QuadIndex::TopLeft);
-            CHECK(tiles[1].coords == glm::uvec2 { 1, 0 });
-            CHECK(child_index(tiles[1]) == tile::QuadIndex::TopRight);
-            CHECK(tiles[2].coords == glm::uvec2 { 0, 1 });
-            CHECK(child_index(tiles[2]) == tile::QuadIndex::BottomLeft);
-            CHECK(tiles[3].coords == glm::uvec2 { 1, 1 });
-            CHECK(child_index(tiles[3]) == tile::QuadIndex::BottomRight);
+            CHECK(array_contains(tiles, { 1, { 0, 0 } }));
+            CHECK(array_contains(tiles, { 1, { 1, 0 } }));
+            CHECK(array_contains(tiles, { 1, { 0, 1 } }));
+            CHECK(array_contains(tiles, { 1, { 1, 1 } }));
         }
         {
             const auto tiles = tile::Id{1, {1, 1}}.children();
             REQUIRE(tiles.size() == 4);
-            for (const auto& tid : tiles)
-                CHECK(tid.zoom_level == 2);
-            CHECK(tiles[0].coords == glm::uvec2 { 2, 2 });
-            CHECK(child_index(tiles[0]) == tile::QuadIndex::TopLeft);
-            CHECK(tiles[1].coords == glm::uvec2 { 3, 2 });
-            CHECK(child_index(tiles[1]) == tile::QuadIndex::TopRight);
-            CHECK(tiles[2].coords == glm::uvec2 { 2, 3 });
-            CHECK(child_index(tiles[2]) == tile::QuadIndex::BottomLeft);
-            CHECK(tiles[3].coords == glm::uvec2 { 3, 3 });
-            CHECK(child_index(tiles[3]) == tile::QuadIndex::BottomRight);
+            CHECK(array_contains(tiles, { 2, { 2, 2 } }));
+            CHECK(array_contains(tiles, { 2, { 3, 2 } }));
+            CHECK(array_contains(tiles, { 2, { 2, 3 } }));
+            CHECK(array_contains(tiles, { 2, { 3, 3 } }));
         }
     }
     SECTION("mercator SlippyMap (y points down)")
@@ -104,30 +121,18 @@ TEST_CASE("radix/tile::Id, children")
         {
             const auto tiles = tile::Id{0, {0, 0}, tile::Scheme::SlippyMap}.children();
             REQUIRE(tiles.size() == 4);
-            for (const auto& tid : tiles)
-                CHECK(tid.zoom_level == 1);
-            CHECK(tiles[0].coords == glm::uvec2 { 0, 1 });
-            CHECK(child_index(tiles[0]) == tile::QuadIndex::TopLeft);
-            CHECK(tiles[1].coords == glm::uvec2 { 1, 1 });
-            CHECK(child_index(tiles[1]) == tile::QuadIndex::TopRight);
-            CHECK(tiles[2].coords == glm::uvec2 { 0, 0 });
-            CHECK(child_index(tiles[2]) == tile::QuadIndex::BottomLeft);
-            CHECK(tiles[3].coords == glm::uvec2 { 1, 0 });
-            CHECK(child_index(tiles[3]) == tile::QuadIndex::BottomRight);
+            CHECK(array_contains(tiles, { 1, { 0, 0 }, tile::Scheme::SlippyMap }));
+            CHECK(array_contains(tiles, { 1, { 1, 0 }, tile::Scheme::SlippyMap }));
+            CHECK(array_contains(tiles, { 1, { 0, 1 }, tile::Scheme::SlippyMap }));
+            CHECK(array_contains(tiles, { 1, { 1, 1 }, tile::Scheme::SlippyMap }));
         }
         {
             const auto tiles = tile::Id{1, {1, 0}, tile::Scheme::SlippyMap}.children();
             REQUIRE(tiles.size() == 4);
-            for (const auto& tid : tiles)
-                CHECK(tid.zoom_level == 2);
-            CHECK(tiles[0].coords == glm::uvec2 { 2, 1 });
-            CHECK(child_index(tiles[0]) == tile::QuadIndex::TopLeft);
-            CHECK(tiles[1].coords == glm::uvec2 { 3, 1 });
-            CHECK(child_index(tiles[1]) == tile::QuadIndex::TopRight);
-            CHECK(tiles[2].coords == glm::uvec2 { 2, 0 });
-            CHECK(child_index(tiles[2]) == tile::QuadIndex::BottomLeft);
-            CHECK(tiles[3].coords == glm::uvec2 { 3, 0 });
-            CHECK(child_index(tiles[3]) == tile::QuadIndex::BottomRight);
+            CHECK(array_contains(tiles, { 2, { 2, 1 }, tile::Scheme::SlippyMap }));
+            CHECK(array_contains(tiles, { 2, { 3, 1 }, tile::Scheme::SlippyMap }));
+            CHECK(array_contains(tiles, { 2, { 2, 0 }, tile::Scheme::SlippyMap }));
+            CHECK(array_contains(tiles, { 2, { 3, 0 }, tile::Scheme::SlippyMap }));
         }
     }
 
@@ -137,30 +142,18 @@ TEST_CASE("radix/tile::Id, children")
         {
             const auto tiles = tile::Id{0, {1, 0}, tile::Scheme::Tms}.children();
             REQUIRE(tiles.size() == 4);
-            for (const auto& tid : tiles)
-                CHECK(tid.zoom_level == 1);
-            CHECK(tiles[0].coords == glm::uvec2 { 2, 0 });
-            CHECK(child_index(tiles[0]) == tile::QuadIndex::TopLeft);
-            CHECK(tiles[1].coords == glm::uvec2 { 3, 0 });
-            CHECK(child_index(tiles[1]) == tile::QuadIndex::TopRight);
-            CHECK(tiles[2].coords == glm::uvec2 { 2, 1 });
-            CHECK(child_index(tiles[2]) == tile::QuadIndex::BottomLeft);
-            CHECK(tiles[3].coords == glm::uvec2 { 3, 1 });
-            CHECK(child_index(tiles[3]) == tile::QuadIndex::BottomRight);
+            CHECK(array_contains(tiles, { 1, { 2, 1 } }));
+            CHECK(array_contains(tiles, { 1, { 3, 1 } }));
+            CHECK(array_contains(tiles, { 1, { 2, 0 } }));
+            CHECK(array_contains(tiles, { 1, { 3, 0 } }));
         }
         {
             const auto tiles = tile::Id{1, {3, 0}, tile::Scheme::Tms}.children();
             REQUIRE(tiles.size() == 4);
-            for (const auto& tid : tiles)
-                CHECK(tid.zoom_level == 2);
-            CHECK(tiles[0].coords == glm::uvec2 { 6, 0 });
-            CHECK(child_index(tiles[0]) == tile::QuadIndex::TopLeft);
-            CHECK(tiles[1].coords == glm::uvec2 { 7, 0 });
-            CHECK(child_index(tiles[1]) == tile::QuadIndex::TopRight);
-            CHECK(tiles[2].coords == glm::uvec2 { 6, 1 });
-            CHECK(child_index(tiles[2]) == tile::QuadIndex::BottomLeft);
-            CHECK(tiles[3].coords == glm::uvec2 { 7, 1 });
-            CHECK(child_index(tiles[3]) == tile::QuadIndex::BottomRight);
+            CHECK(array_contains(tiles, { 2, { 6, 0 } }));
+            CHECK(array_contains(tiles, { 2, { 7, 0 } }));
+            CHECK(array_contains(tiles, { 2, { 6, 1 } }));
+            CHECK(array_contains(tiles, { 2, { 7, 1 } }));
         }
     }
 
@@ -169,30 +162,18 @@ TEST_CASE("radix/tile::Id, children")
         {
             const auto tiles = tile::Id{0, {1, 0}, tile::Scheme::SlippyMap}.children();
             REQUIRE(tiles.size() == 4);
-            for (const auto& tid : tiles)
-                CHECK(tid.zoom_level == 1);
-            CHECK(tiles[0].coords == glm::uvec2 { 2, 1 });
-            CHECK(child_index(tiles[0]) == tile::QuadIndex::TopLeft);
-            CHECK(tiles[1].coords == glm::uvec2 { 3, 1 });
-            CHECK(child_index(tiles[1]) == tile::QuadIndex::TopRight);
-            CHECK(tiles[2].coords == glm::uvec2 { 2, 0 });
-            CHECK(child_index(tiles[2]) == tile::QuadIndex::BottomLeft);
-            CHECK(tiles[3].coords == glm::uvec2 { 3, 0 });
-            CHECK(child_index(tiles[3]) == tile::QuadIndex::BottomRight);
+            CHECK(array_contains(tiles, { 1, { 2, 1 }, tile::Scheme::SlippyMap }));
+            CHECK(array_contains(tiles, { 1, { 3, 1 }, tile::Scheme::SlippyMap }));
+            CHECK(array_contains(tiles, { 1, { 2, 0 }, tile::Scheme::SlippyMap }));
+            CHECK(array_contains(tiles, { 1, { 3, 0 }, tile::Scheme::SlippyMap }));
         }
         {
             const auto tiles = tile::Id{1, {3, 1}, tile::Scheme::SlippyMap}.children();
             REQUIRE(tiles.size() == 4);
-            for (const auto& tid : tiles)
-                CHECK(tid.zoom_level == 2);
-            CHECK(tiles[0].coords == glm::uvec2 { 6, 3 });
-            CHECK(child_index(tiles[0]) == tile::QuadIndex::TopLeft);
-            CHECK(tiles[1].coords == glm::uvec2 { 7, 3 });
-            CHECK(child_index(tiles[1]) == tile::QuadIndex::TopRight);
-            CHECK(tiles[2].coords == glm::uvec2 { 6, 2 });
-            CHECK(child_index(tiles[2]) == tile::QuadIndex::BottomLeft);
-            CHECK(tiles[3].coords == glm::uvec2 { 7, 2 });
-            CHECK(child_index(tiles[3]) == tile::QuadIndex::BottomRight);
+            CHECK(array_contains(tiles, { 2, { 6, 3 }, tile::Scheme::SlippyMap }));
+            CHECK(array_contains(tiles, { 2, { 7, 3 }, tile::Scheme::SlippyMap }));
+            CHECK(array_contains(tiles, { 2, { 6, 2 }, tile::Scheme::SlippyMap }));
+            CHECK(array_contains(tiles, { 2, { 7, 2 }, tile::Scheme::SlippyMap }));
         }
     }
 }
