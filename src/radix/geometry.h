@@ -78,7 +78,11 @@ public:
     using Base::max;
     Aabb2() = default;
     Aabb2(const Vec& min, const Vec& max) : Base{min, max} {}
-    Aabb2(const geometry::Aabb<3, T>& other) : Base{Vec(other.min), Vec(other.max)} {}
+    template <typename D>
+    Aabb2(const geometry::Aabb<3, D>& other)
+        : Base { Vec(other.min), Vec(other.max) }
+    {
+    }
 
     [[nodiscard]] T width() const { return max.x - min.x; }
     [[nodiscard]] T height() const { return max.y - min.y; }
@@ -190,7 +194,7 @@ glm::vec<n_dimensions, T> centroid(const Aabb<n_dimensions, T>& box)
 }
 
 template <glm::length_t n_dimensions, typename T>
-T distance(const Aabb<n_dimensions, T>& box, const glm::vec<n_dimensions, T>& point)
+T distance_sq(const Aabb<n_dimensions, T>& box, const glm::vec<n_dimensions, T>& point)
 {
     T distance_squared = 0;
     for (int i = 0; i < n_dimensions; ++i) {
@@ -201,7 +205,13 @@ T distance(const Aabb<n_dimensions, T>& box, const glm::vec<n_dimensions, T>& po
             value = point[i] - box.max[i];
         distance_squared += value * value;
     }
-    return std::sqrt(distance_squared);
+    return distance_squared;
+}
+
+template <glm::length_t n_dimensions, typename T>
+T distance(const Aabb<n_dimensions, T>& box, const glm::vec<n_dimensions, T>& point)
+{
+    return std::sqrt(distance_sq(box, point));
 }
 
 template <glm::length_t n_dimensions, typename T>
