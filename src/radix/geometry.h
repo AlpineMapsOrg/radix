@@ -368,4 +368,78 @@ std::array<glm::vec<3, T>, 8> corners(const Aabb<3, T> &box)
 
     return {a, b, c, d, e, f, g, h};
 }
+
+template <typename T>
+std::array<radix::geometry::Edge<3, T>, 12> edges(const radix::geometry::Aabb<3, T> &box) {
+    using Vert = glm::vec<3, T>;
+    using Edge = radix::geometry::Edge<3, T>;
+
+    // counter clockwise top face
+    const auto a = Vert{box.min.x, box.min.y, box.max.z};
+    const auto b = Vert{box.max.x, box.min.y, box.max.z};
+    const auto c = Vert{box.max.x, box.max.y, box.max.z};
+    const auto d = Vert{box.min.x, box.max.y, box.max.z};
+
+    // counter clockwise bottom face, normal points up
+    const auto e = Vert{box.min.x, box.min.y, box.min.z};
+    const auto f = Vert{box.max.x, box.min.y, box.min.z};
+    const auto g = Vert{box.max.x, box.max.y, box.min.z};
+    const auto h = Vert{box.min.x, box.max.y, box.min.z};
+
+    return {
+        Edge{a, b},
+        Edge{b, c},
+        Edge{c, d},
+        Edge{d, a},
+
+        Edge{e, f},
+        Edge{f, g},
+        Edge{g, h},
+        Edge{h, e},
+
+        Edge{a, e},
+        Edge{b, f},
+        Edge{c, g},
+        Edge{d, h}};
+}
+
+template <typename T>
+std::array<std::array<glm::vec<3, T>, 4>, 6> quads(const radix::geometry::Aabb<3, T> &box) {
+    using Vert = glm::vec<3, T>;
+    using Face = std::array<Vert, 4>;
+
+    // counter clockwise top face
+    const auto a = Vert{box.min.x, box.min.y, box.max.z};
+    const auto b = Vert{box.max.x, box.min.y, box.max.z};
+    const auto c = Vert{box.max.x, box.max.y, box.max.z};
+    const auto d = Vert{box.min.x, box.max.y, box.max.z};
+    // counter clockwise bottom face, normal points up
+    const auto e = Vert{box.min.x, box.min.y, box.min.z};
+    const auto f = Vert{box.max.x, box.min.y, box.min.z};
+    const auto g = Vert{box.max.x, box.max.y, box.min.z};
+    const auto h = Vert{box.min.x, box.max.y, box.min.z};
+
+    return {
+        // Top face (+z)
+        Face{a, b, c, d},
+        // Bottom face (-z)
+        Face{e, h, g, f},
+        // Front face (+y)
+        Face{b, f, g, c},
+        // Back face (-y)
+        Face{a, d, h, e},
+        // Right face (+x)
+        Face{b, c, g, f},
+        // Left face (-x)
+        Face{a, e, h, d}};
+}
+
+template <glm::length_t n_dims, typename T>
+radix::geometry::Aabb<n_dims, T> find_bounds(const std::vector<glm::vec<n_dims, T>> &points) {
+    radix::geometry::Aabb<n_dims, T> bounds;
+    for (const auto &point : points) {
+        bounds.expand_by(point);
+    }
+    return bounds;
+}
 } // namespace radix::geometry
