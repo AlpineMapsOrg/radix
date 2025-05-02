@@ -41,8 +41,8 @@ class Aabb {
     using Vec = glm::vec<n_dims, T>;
 
 public:
-    Vec min = {};
-    Vec max = {};
+    Vec min = {std::numeric_limits<T>::max()};
+    Vec max = {std::numeric_limits<T>::lowest()};
 
     bool operator==(const Aabb<n_dims, T>& other) const = default;
 
@@ -57,7 +57,7 @@ public:
     [[nodiscard]] bool contains_exclusive(const Vec &point) const {
         return glm::all(glm::lessThan(min, point)) && glm::all(glm::greaterThan(max, point));
     }
-    [[nodiscard]] glm::vec<n_dims, T> centre() const { return min + size() * T(0.5); }
+    [[nodiscard]] glm::vec<n_dims, T> centre() const { return min + size() / T(2); }
 
     void expand_by(const Vec &point) {
         this->min = glm::min(this->min, point);
@@ -79,9 +79,12 @@ public:
     Aabb2() = default;
     Aabb2(const Vec& min, const Vec& max) : Base{min, max} {}
     template <typename D>
-    Aabb2(const geometry::Aabb<3, D>& other)
-        : Base { Vec(other.min), Vec(other.max) }
-    {
+    Aabb2(const geometry::Aabb<2, D>& other)
+        : Base { Vec(other.min), Vec(other.max) } {
+    }
+    template <typename D>
+    Aabb2(const geometry::Aabb<3, D> &other)
+        : Base{Vec(other.min), Vec(other.max)} {
     }
 
     [[nodiscard]] T width() const { return max.x - min.x; }
