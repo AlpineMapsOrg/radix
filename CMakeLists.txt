@@ -22,7 +22,7 @@ project(radix)
 option(ALP_UNITTESTS "include unit test targets in the buildsystem" ON)
 set(ALP_EXTERN_DIR "3rdparty" CACHE STRING "name of the directory to store external libraries, fonts etc..")
 
-include(cmake/alp_add_git_repository.cmake)
+include(cmake/AddRepo.cmake)
 
 add_subdirectory(src)
 if (ALP_UNITTESTS)

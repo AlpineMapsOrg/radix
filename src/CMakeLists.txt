@@ -29,8 +29,6 @@ if (UNIX AND NOT EMSCRIPTEN AND NOT ANDROID)
         if it's not installed, you'll get errors, that openmp or other stuff is not installed (hard to track down)" OFF)
 endif()
 
-include(../cmake/alp_add_git_repository.cmake)
-
 if (NOT TARGET glm::glm)
     alp_add_git_repository(glm URL https://github.com/g-truc/glm.git COMMITISH b06b775c1c80af51a1183c0e167f9de3b2351a79)
 endif()
