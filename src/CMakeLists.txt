@@ -48,7 +48,6 @@ target_compile_definitions(radix PUBLIC GLM_FORCE_XYZW_ONLY GLM_ENABLE_EXPERIMEN
 
 if (ALP_ENABLE_ASSERTS)
     target_compile_options(radix PUBLIC -UNDEBUG)
-    target_compile_definitions(radix PUBLIC TNTN_ASSERT_ACTIVE)
 endif()
 
 if (ALP_ENABLE_ADDRESS_SANITIZER)
