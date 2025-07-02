@@ -20,7 +20,7 @@ cmake_minimum_required(VERSION 3.25)
 project(radix_src LANGUAGES CXX)
 
 option(ALP_ENABLE_ADDRESS_SANITIZER "compiles atb with address sanitizer enabled (only debug, works only on g++ and clang)" OFF)
-option(ALP_ENABLE_ASSERTS "enable asserts (do not define NDEBUG)" ON)
+option(ALP_ENABLE_ASSERTS "enable asserts (do not define NDEBUG)" OFF)
 if (EMSCRIPTEN)
     set(ALP_WWW_INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE PATH "path to the install directory (for webassembly files, i.e., www directory)")
 endif()
