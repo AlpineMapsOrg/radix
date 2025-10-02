@@ -24,6 +24,7 @@
 #include <iterator>
 #include <optional>
 #include <vector>
+#include <span>
 
 #include <glm/glm.hpp>
 
@@ -46,9 +47,13 @@ public:
 
     bool operator==(const Aabb<n_dims, T>& other) const = default;
 
-    [[nodiscard]] glm::vec<n_dims, T> size() const { return max - min; }
-    [[nodiscard]] bool contains(const Vec& point) const
-    {
+    [[nodiscard]] glm::vec<n_dims, T> size() const { return max - min;
+    }
+    [[nodiscard]] glm::vec<n_dims, T> centre() const {
+        return min + size() / T(2);
+    }
+    
+    [[nodiscard]] bool contains(const Vec& point) const {
         return glm::all(glm::lessThanEqual(min, point)) && glm::all(glm::greaterThan(max, point));
     }
     [[nodiscard]] bool contains_inclusive(const Vec &point) const {
@@ -57,7 +62,6 @@ public:
     [[nodiscard]] bool contains_exclusive(const Vec &point) const {
         return glm::all(glm::lessThan(min, point)) && glm::all(glm::greaterThan(max, point));
     }
-    [[nodiscard]] glm::vec<n_dims, T> centre() const { return min + size() / T(2); }
 
     void expand_by(const Vec &point) {
         this->min = glm::min(this->min, point);
@@ -435,7 +439,7 @@ std::array<std::array<glm::vec<3, T>, 4>, 6> quads(const radix::geometry::Aabb<3
 }
 
 template <glm::length_t n_dims, typename T>
-radix::geometry::Aabb<n_dims, T> find_bounds(const std::vector<glm::vec<n_dims, T>> &points) {
+radix::geometry::Aabb<n_dims, T> find_bounds(const std::span<const glm::vec<n_dims, T>> points) {
     radix::geometry::Aabb<n_dims, T> bounds;
     for (const auto &point : points) {
         bounds.expand_by(point);
