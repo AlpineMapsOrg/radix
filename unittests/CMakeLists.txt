@@ -27,6 +27,7 @@ set(RADIX_UNITTESTS_SOURCES
     iterator.cpp
     main.cpp
     quad_tree.cpp
+    raster.cpp
     tile.cpp
     tile_heights.cpp
     height_encoding.cpp
