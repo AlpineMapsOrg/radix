@@ -238,11 +238,21 @@ TEST_CASE("radix RasterMask uses normalized contiguous bytes")
     input.buffer()[1] = 0;
     input.buffer()[2] = 4;
 
-    const auto mask = radix::raster::transform_mask(input, [](const int value) { return value > 0; });
+    const auto mask = radix::raster::transform(input, [](const int value) { return value > 0; });
+    static_assert(std::same_as<decltype(mask), const radix::RasterMask>);
     CHECK(mask.buffer()[0] == 0);
     CHECK(mask.buffer()[1] == 0);
     CHECK(mask.buffer()[2] == 1);
     CHECK(mask.bytes().size() == 3);
+
+    const auto values = radix::raster::transform(input, [](const int value) { return value; });
+    static_assert(std::same_as<decltype(values), const radix::Raster<int>>);
+    CHECK(std::ranges::equal(values.buffer(), input.buffer()));
+
+    const auto coordinate_mask
+        = radix::raster::transform(input, [](const int, const glm::uvec2 position) { return position.x == 1; });
+    static_assert(std::same_as<decltype(coordinate_mask), const radix::RasterMask>);
+    CHECK(std::ranges::equal(coordinate_mask.buffer(), std::array<std::uint8_t, 3> { 0, 1, 0 }));
 }
 
 TEST_CASE("radix raster masked transform validates dimensions")
@@ -259,4 +269,10 @@ TEST_CASE("radix raster masked transform validates dimensions")
     REQUIRE(valid.has_value());
     CHECK(valid->pixel({ 0, 0 }) == 0);
     CHECK(valid->pixel({ 1, 0 }) == 8);
+
+    const auto boolean = radix::raster::transform(input, mask, [](const int value) { return value > 0; });
+    static_assert(std::same_as<decltype(boolean), const std::expected<radix::RasterMask, radix::RasterError>>);
+    REQUIRE(boolean.has_value());
+    CHECK(boolean->pixel({ 0, 0 }) == 0);
+    CHECK(boolean->pixel({ 1, 0 }) == 1);
 }

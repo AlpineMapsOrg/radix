@@ -172,6 +172,28 @@ using RasterMask = Raster<std::uint8_t>;
 namespace raster {
     namespace detail {
 
+        template <typename Output>
+        struct transform_raster {
+            using type = Raster<Output>;
+        };
+
+        template <>
+        struct transform_raster<bool> {
+            using type = RasterMask;
+        };
+
+        template <typename Output>
+        using transform_raster_t = typename transform_raster<Output>::type;
+
+        template <typename Output, typename Value>
+        [[nodiscard]] auto transform_value(Value&& value)
+        {
+            if constexpr (std::same_as<Output, bool>)
+                return static_cast<std::uint8_t>(value ? 1 : 0);
+            else
+                return std::forward<Value>(value);
+        }
+
         template <std::integral T>
         [[nodiscard]] constexpr T average_four(const T a, const T b, const T c, const T d)
         {
@@ -318,10 +340,11 @@ namespace raster {
     requires std::invocable<Function, const Input&>
     [[nodiscard]] auto transform(const Raster<Input>& input, Function&& function)
     {
-        using Output = std::remove_cvref_t<std::invoke_result_t<Function, const Input&>>;
-        static_assert(!std::same_as<Output, bool>, "Use radix::raster::transform_mask for boolean predicates");
-        Raster<Output> output(input.size());
-        std::ranges::transform(input, output.begin(), std::forward<Function>(function));
+        using OutputValue = std::remove_cvref_t<std::invoke_result_t<Function, const Input&>>;
+        detail::transform_raster_t<OutputValue> output(input.size());
+        std::ranges::transform(input, output.begin(), [&](const Input& value) {
+            return detail::transform_value<OutputValue>(std::invoke(function, value));
+        });
         return output;
     }
 
@@ -329,36 +352,12 @@ namespace raster {
     requires std::invocable<Function, const Input&, glm::uvec2> && (!std::invocable<Function, const Input&>)
     [[nodiscard]] auto transform(const Raster<Input>& input, Function&& function)
     {
-        using Output = std::remove_cvref_t<std::invoke_result_t<Function, const Input&, glm::uvec2>>;
-        static_assert(!std::same_as<Output, bool>, "Use radix::raster::transform_mask for boolean predicates");
-        Raster<Output> output(input.size());
+        using OutputValue = std::remove_cvref_t<std::invoke_result_t<Function, const Input&, glm::uvec2>>;
+        detail::transform_raster_t<OutputValue> output(input.size());
         for (unsigned y = 0; y < input.height(); ++y) {
             for (unsigned x = 0; x < input.width(); ++x) {
                 const glm::uvec2 position(x, y);
-                output.pixel(position) = std::invoke(function, input.pixel(position), position);
-            }
-        }
-        return output;
-    }
-
-    template <typename Input, typename Predicate>
-    requires std::predicate<Predicate, const Input&>
-    [[nodiscard]] RasterMask transform_mask(const Raster<Input>& input, Predicate&& predicate)
-    {
-        RasterMask output(input.size());
-        std::ranges::transform(input, output.begin(), [&](const Input& value) { return static_cast<std::uint8_t>(std::invoke(predicate, value)); });
-        return output;
-    }
-
-    template <typename Input, typename Predicate>
-    requires std::predicate<Predicate, const Input&, glm::uvec2> && (!std::predicate<Predicate, const Input&>)
-    [[nodiscard]] RasterMask transform_mask(const Raster<Input>& input, Predicate&& predicate)
-    {
-        RasterMask output(input.size());
-        for (unsigned y = 0; y < input.height(); ++y) {
-            for (unsigned x = 0; x < input.width(); ++x) {
-                const glm::uvec2 position(x, y);
-                output.pixel(position) = static_cast<std::uint8_t>(std::invoke(predicate, input.pixel(position), position));
+                output.pixel(position) = detail::transform_value<OutputValue>(std::invoke(function, input.pixel(position), position));
             }
         }
         return output;
@@ -367,19 +366,18 @@ namespace raster {
     template <typename Input, typename Function>
     requires std::invocable<Function, const Input&>
     [[nodiscard]] auto transform(const Raster<Input>& input, const RasterMask& mask, Function&& function)
-        -> std::expected<Raster<std::remove_cvref_t<std::invoke_result_t<Function, const Input&>>>, RasterError>
+        -> std::expected<detail::transform_raster_t<std::remove_cvref_t<std::invoke_result_t<Function, const Input&>>>, RasterError>
     {
-        using Output = std::remove_cvref_t<std::invoke_result_t<Function, const Input&>>;
-        static_assert(!std::same_as<Output, bool>, "Use radix::raster::transform_mask for boolean predicates");
+        using OutputValue = std::remove_cvref_t<std::invoke_result_t<Function, const Input&>>;
         if (input.size() != mask.size())
             return std::unexpected(RasterError::IncompatibleDimensions);
 
-        Raster<Output> output(input.size());
+        detail::transform_raster_t<OutputValue> output(input.size());
         for (unsigned y = 0; y < input.height(); ++y) {
             for (unsigned x = 0; x < input.width(); ++x) {
                 const glm::uvec2 position(x, y);
                 if (mask.pixel(position) != 0)
-                    output.pixel(position) = std::invoke(function, input.pixel(position));
+                    output.pixel(position) = detail::transform_value<OutputValue>(std::invoke(function, input.pixel(position)));
             }
         }
         return output;
@@ -388,19 +386,18 @@ namespace raster {
     template <typename Input, typename Function>
     requires std::invocable<Function, const Input&, glm::uvec2> && (!std::invocable<Function, const Input&>)
     [[nodiscard]] auto transform(const Raster<Input>& input, const RasterMask& mask, Function&& function)
-        -> std::expected<Raster<std::remove_cvref_t<std::invoke_result_t<Function, const Input&, glm::uvec2>>>, RasterError>
+        -> std::expected<detail::transform_raster_t<std::remove_cvref_t<std::invoke_result_t<Function, const Input&, glm::uvec2>>>, RasterError>
     {
-        using Output = std::remove_cvref_t<std::invoke_result_t<Function, const Input&, glm::uvec2>>;
-        static_assert(!std::same_as<Output, bool>, "Use radix::raster::transform_mask for boolean predicates");
+        using OutputValue = std::remove_cvref_t<std::invoke_result_t<Function, const Input&, glm::uvec2>>;
         if (input.size() != mask.size())
             return std::unexpected(RasterError::IncompatibleDimensions);
 
-        Raster<Output> output(input.size());
+        detail::transform_raster_t<OutputValue> output(input.size());
         for (unsigned y = 0; y < input.height(); ++y) {
             for (unsigned x = 0; x < input.width(); ++x) {
                 const glm::uvec2 position(x, y);
                 if (mask.pixel(position) != 0)
-                    output.pixel(position) = std::invoke(function, input.pixel(position), position);
+                    output.pixel(position) = detail::transform_value<OutputValue>(std::invoke(function, input.pixel(position), position));
             }
         }
         return output;
