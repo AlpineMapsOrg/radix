@@ -24,8 +24,6 @@
 namespace {
 radix::TileHeights::KeyType key(const radix::tile::Id& tile_id)
 {
-    //    const auto id = tile_id.to(tile::Scheme::Tms);
-    //    return std::make_tuple(id.zoom_level, id.coords.x, id.coords.y);
     assert(tile_id.zoom_level < 28);
     uint64_t key = tile_id.zoom_level;
     key <<= 28;

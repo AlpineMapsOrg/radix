@@ -37,55 +37,37 @@ enum class Border {
     No = 0
 };
 
-// The difference between TMS and slippyMap is whether y starts counting from the bottom (south) or top (north).
-// https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/#1/-16.88/79.02
-//
-enum class Scheme {
-    Tms, // southern most tile is y = 0
-    SlippyMap // aka Google, XYZ, webmap tiles; northern most tile is y = 0
-};
-
 enum class QuadPosition : unsigned { TopLeft = 0, TopRight, BottomLeft, BottomRight };
 
+/// A Google/Mapbox/XYZ tile identifier. The origin is north-west, x grows east, and y grows south.
 struct Id {
     unsigned zoom_level = unsigned(-1);
     glm::uvec2 coords = {};
-    Scheme scheme = Scheme::Tms;
 
-    [[nodiscard]] Id to(Scheme new_scheme) const
-    {
-        if (scheme == new_scheme)
-            return *this;
-
-        const auto n_y_tiles = (1u << zoom_level);
-        const auto coord_y = n_y_tiles - coords.y - 1;
-        return { zoom_level, { coords.x, coord_y }, new_scheme };
-    }
-    [[nodiscard]] Id parent() const { return { zoom_level - 1, coords / 2u, scheme }; }
+    [[nodiscard]] Id parent() const { return { zoom_level - 1, coords / 2u }; }
     /// returns the children in an unspecified order
     [[nodiscard]] std::array<Id, 4> children() const
     {
         // clang-format off
         return {
-            Id { zoom_level + 1, coords * 2u + glm::uvec2(0, 0), scheme },
-            Id { zoom_level + 1, coords * 2u + glm::uvec2(1, 0), scheme },
-            Id { zoom_level + 1, coords * 2u + glm::uvec2(0, 1), scheme },
-            Id { zoom_level + 1, coords * 2u + glm::uvec2(1, 1), scheme }
+            Id { zoom_level + 1, coords * 2u + glm::uvec2(0, 0) },
+            Id { zoom_level + 1, coords * 2u + glm::uvec2(1, 0) },
+            Id { zoom_level + 1, coords * 2u + glm::uvec2(0, 1) },
+            Id { zoom_level + 1, coords * 2u + glm::uvec2(1, 1) }
         };
         // clang-format on
     }
     bool operator==(const Id& other) const = default;
     bool operator<(const Id& other) const
     {
-        assert(other.scheme == scheme);
-        return std::tie(zoom_level, coords.x, coords.y, scheme) < std::tie(other.zoom_level, other.coords.x, other.coords.y, other.scheme);
+        return std::tie(zoom_level, coords.x, coords.y) < std::tie(other.zoom_level, other.coords.x, other.coords.y);
     }
-    operator std::tuple<unsigned, unsigned, unsigned, unsigned>() const
+    operator std::tuple<unsigned, unsigned, unsigned>() const
     {
-        return std::make_tuple(zoom_level, coords.x, coords.y, unsigned(scheme));
+        return std::make_tuple(zoom_level, coords.x, coords.y);
     }
 
-    using Hasher = typename hasher::for_tuple<unsigned, unsigned, unsigned, unsigned>;
+    using Hasher = typename hasher::for_tuple<unsigned, unsigned, unsigned>;
 };
 
 /// gives the index in the children array of the parent, i.e., in the order top left, top right, bottom left, bottom right
@@ -93,18 +75,7 @@ inline QuadPosition quad_position(const Id& id)
 {
     const auto x_comp = id.coords.x % 2;
 
-    // scheme y_index on_bottom
-    //      0       0       = 1
-    //      0       1       = 0
-    //      1       0       = 0
-    //      1       1       = 1
-
-    const auto y_comp = unsigned(unsigned(id.scheme) == (id.coords.y % 2));
-    // enum class Scheme {
-    //     Tms, // southern most tile is y = 0
-    //     SlippyMap // aka Google, XYZ, webmap tiles; northern most tile is y = 0
-    // };
-    // enum class QuadIndex : unsigned { TopLeft = 0, TopRight, BottomLeft, BottomRight };
+    const auto y_comp = id.coords.y % 2;
 
     return QuadPosition(2 * y_comp + x_comp);
 }
@@ -114,32 +85,14 @@ template <typename T> using IdMap = std::unordered_map<tile::Id, T, tile::Id::Ha
 
 inline std::string to_string(const Id& value)
 {
-    std::string scheme;
-    switch (value.scheme) {
-    case Scheme::Tms:
-        scheme = "Tms";
-        break;
-    case Scheme::SlippyMap:
-        scheme = "SlippyMap";
-        break;
-    }
-    return scheme + ":" + std::to_string(value.zoom_level) + "/" + std::to_string(value.coords.x) + "/" + std::to_string(value.coords.y);
+    return std::to_string(value.zoom_level) + "/" + std::to_string(value.coords.x) + "/" + std::to_string(value.coords.y);
 }
 
 // helper for catch2
 inline std::ostream& operator<<(std::ostream& os, const Id& value)
 {
-    std::string scheme;
-    switch (value.scheme) {
-    case Scheme::Tms:
-        scheme = "Tms";
-        break;
-    case Scheme::SlippyMap:
-        scheme = "SlippyMap";
-        break;
-    }
     os << "{"
-       << value.zoom_level << ", {" << value.coords.x << ", " << value.coords.y << "}, " << scheme
+       << value.zoom_level << ", {" << value.coords.x << ", " << value.coords.y << "}"
        << "}";
     return os;
 }
