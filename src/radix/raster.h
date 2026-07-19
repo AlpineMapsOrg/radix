@@ -45,11 +45,6 @@ enum class RasterError {
 template <typename T>
 class Raster;
 
-namespace raster {
-    template <typename T>
-    [[nodiscard]] std::expected<void, RasterError> append_vertically(Raster<T>& destination, const Raster<T>& source);
-}
-
 template <typename T>
 class Raster {
     static_assert(!std::same_as<std::remove_cv_t<T>, bool>,
@@ -165,9 +160,6 @@ private:
         return dummy;
     }
 
-    template <typename U>
-    friend std::expected<void, RasterError> raster::append_vertically(Raster<U>&, const Raster<U>&);
-
     glm::uvec2 m_size { 0, 0 };
     std::vector<T> m_data;
 };
@@ -178,33 +170,6 @@ private:
 using RasterMask = Raster<std::uint8_t>;
 
 namespace raster {
-
-    template <typename T>
-    [[nodiscard]] std::expected<void, RasterError> append_vertically(Raster<T>& destination, const Raster<T>& source)
-    {
-        if (destination.width() != source.width())
-            return std::unexpected(RasterError::IncompatibleDimensions);
-
-        const auto new_height = static_cast<std::uint64_t>(destination.height()) + source.height();
-        if (new_height > std::numeric_limits<unsigned>::max())
-            return std::unexpected(RasterError::IncompatibleDimensions);
-
-        const auto destination_length = destination.buffer_length();
-        const auto source_length = source.buffer_length();
-        if (source_length > destination.m_data.max_size() - destination_length)
-            return std::unexpected(RasterError::IncompatibleDimensions);
-
-        destination.m_data.reserve(destination_length + source_length);
-        if (&destination == &source) {
-            destination.m_data.resize(destination_length + source_length);
-            std::copy_n(destination.m_data.begin(), source_length, destination.m_data.begin() + destination_length);
-        } else {
-            destination.m_data.insert(destination.m_data.end(), source.begin(), source.end());
-        }
-        destination.m_size.y = static_cast<unsigned>(new_height);
-        return {};
-    }
-
     namespace detail {
 
         template <std::integral T>
@@ -299,6 +264,53 @@ namespace raster {
             destination = std::copy_n(left.buffer().begin() + static_cast<std::size_t>(y) * left.width(), left.width(), destination);
             std::copy_n(right.buffer().begin() + static_cast<std::size_t>(y) * right.width(), right.width(), destination);
         }
+        return output;
+    }
+
+    template <typename T>
+    [[nodiscard]] std::expected<Raster<T>, RasterError> concatenate_vertically(const Raster<T>& top, const Raster<T>& bottom)
+    {
+        if (top.width() != bottom.width())
+            return std::unexpected(RasterError::IncompatibleDimensions);
+
+        const auto new_height = static_cast<std::uint64_t>(top.height()) + bottom.height();
+        if (new_height > std::numeric_limits<unsigned>::max())
+            return std::unexpected(RasterError::IncompatibleDimensions);
+
+        const glm::uvec2 output_size(top.width(), static_cast<unsigned>(new_height));
+        Raster<T> output(output_size);
+        if (output.size() != output_size)
+            return std::unexpected(RasterError::IncompatibleDimensions);
+
+        auto destination = std::copy(top.begin(), top.end(), output.begin());
+        std::copy(bottom.begin(), bottom.end(), destination);
+        return output;
+    }
+
+    template <typename T>
+    [[nodiscard]] std::expected<Raster<T>, RasterError> concatenate_vertically(const std::span<const Raster<T>> rasters)
+    {
+        if (rasters.empty())
+            return Raster<T> {};
+
+        const auto width = rasters.front().width();
+        std::uint64_t height = 0;
+        for (const auto& raster : rasters) {
+            if (raster.width() != width)
+                return std::unexpected(RasterError::IncompatibleDimensions);
+            height += raster.height();
+            if (height > std::numeric_limits<unsigned>::max())
+                return std::unexpected(RasterError::IncompatibleDimensions);
+        }
+
+        const glm::uvec2 output_size(width, static_cast<unsigned>(height));
+        Raster<T> output(output_size);
+        if (output.size() != output_size)
+            return std::unexpected(RasterError::IncompatibleDimensions);
+
+        auto destination = output.begin();
+        for (const auto& raster : rasters)
+            destination = std::copy(raster.begin(), raster.end(), destination);
         return output;
     }
 

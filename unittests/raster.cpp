@@ -16,8 +16,10 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <numeric>
 #include <ranges>
+#include <span>
 #include <type_traits>
 #include <vector>
 
@@ -107,15 +109,16 @@ TEST_CASE("radix raster resizes by cropping and padding")
 
 TEST_CASE("radix raster concatenates without exposing its vector")
 {
-    radix::Raster<int> top({ 2, 1 }, 1);
+    const radix::Raster<int> top({ 2, 1 }, 1);
     const radix::Raster<int> bottom({ 2, 2 }, 2);
-    REQUIRE(radix::raster::append_vertically(top, bottom).has_value());
-    CHECK(top.size() == glm::uvec2(2, 3));
-    CHECK(top.pixel({ 1, 0 }) == 1);
-    CHECK(top.pixel({ 1, 2 }) == 2);
+    const auto vertical_result = radix::raster::concatenate_vertically(top, bottom);
+    REQUIRE(vertical_result.has_value());
+    CHECK(vertical_result->size() == glm::uvec2(2, 3));
+    CHECK(vertical_result->pixel({ 1, 0 }) == 1);
+    CHECK(vertical_result->pixel({ 1, 2 }) == 2);
 
     const radix::Raster<int> right({ 1, 3 }, 3);
-    const auto combined_result = radix::raster::concatenate_horizontally(top, right);
+    const auto combined_result = radix::raster::concatenate_horizontally(*vertical_result, right);
     REQUIRE(combined_result.has_value());
     const auto& combined = *combined_result;
     CHECK(combined.size() == glm::uvec2(3, 3));
@@ -125,30 +128,50 @@ TEST_CASE("radix raster concatenates without exposing its vector")
 
 TEST_CASE("radix raster concatenation reports incompatible dimensions")
 {
-    radix::Raster<int> destination({ 2, 2 }, 1);
-    const auto original = destination;
+    const radix::Raster<int> raster({ 2, 2 }, 1);
     const radix::Raster<int> wrong_width({ 3, 1 }, 2);
-    const auto append_result = radix::raster::append_vertically(destination, wrong_width);
-    CHECK_FALSE(append_result.has_value());
-    CHECK(append_result.error() == radix::RasterError::IncompatibleDimensions);
-    CHECK(destination.size() == original.size());
-    CHECK(std::ranges::equal(destination, original));
+    const auto vertical_result = radix::raster::concatenate_vertically(raster, wrong_width);
+    CHECK_FALSE(vertical_result.has_value());
+    CHECK(vertical_result.error() == radix::RasterError::IncompatibleDimensions);
+
+    const std::array incompatible_range { raster, wrong_width };
+    const auto range_result = radix::raster::concatenate_vertically(std::span<const radix::Raster<int>>(incompatible_range));
+    CHECK_FALSE(range_result.has_value());
+    CHECK(range_result.error() == radix::RasterError::IncompatibleDimensions);
 
     const radix::Raster<int> wrong_height({ 1, 3 }, 2);
-    const auto horizontal_result = radix::raster::concatenate_horizontally(destination, wrong_height);
+    const auto horizontal_result = radix::raster::concatenate_horizontally(raster, wrong_height);
     CHECK_FALSE(horizontal_result.has_value());
     CHECK(horizontal_result.error() == radix::RasterError::IncompatibleDimensions);
 }
 
-TEST_CASE("radix raster appends to itself")
+TEST_CASE("radix raster vertically concatenates a range")
 {
-    radix::Raster<int> raster({ 2, 2 }, std::vector { 1, 2, 3, 4 });
+    const std::array rasters {
+        radix::Raster<int>({ 2, 1 }, std::vector { 1, 2 }),
+        radix::Raster<int>({ 2, 2 }, std::vector { 3, 4, 5, 6 }),
+        radix::Raster<int>({ 2, 1 }, std::vector { 7, 8 }),
+    };
 
-    const auto result = radix::raster::append_vertically(raster, raster);
+    const auto result = radix::raster::concatenate_vertically(std::span<const radix::Raster<int>>(rasters));
 
     REQUIRE(result.has_value());
-    CHECK(raster.size() == glm::uvec2(2, 4));
-    CHECK(std::ranges::equal(raster.buffer(), std::array { 1, 2, 3, 4, 1, 2, 3, 4 }));
+    CHECK(result->size() == glm::uvec2(2, 4));
+    CHECK(std::ranges::equal(result->buffer(), std::array { 1, 2, 3, 4, 5, 6, 7, 8 }));
+
+    const std::span<const radix::Raster<int>> empty;
+    const auto empty_result = radix::raster::concatenate_vertically(empty);
+    REQUIRE(empty_result.has_value());
+    CHECK(empty_result->size() == glm::uvec2(0, 0));
+
+    const std::array excessive_height {
+        radix::Raster<int>({ 0, std::numeric_limits<unsigned>::max() }),
+        radix::Raster<int>({ 0, 1 }),
+    };
+    const auto excessive_height_result
+        = radix::raster::concatenate_vertically(std::span<const radix::Raster<int>>(excessive_height));
+    CHECK_FALSE(excessive_height_result.has_value());
+    CHECK(excessive_height_result.error() == radix::RasterError::IncompatibleDimensions);
 }
 
 TEST_CASE("radix raster generates overflow-safe integral mipmaps")
