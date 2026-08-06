@@ -51,5 +51,5 @@ if (EMSCRIPTEN)
         "$<TARGET_FILE_DIR:unittests_radix>/unittests_radix.wasm"
         "$<TARGET_FILE_DIR:unittests_radix>/unittests_radix.html"
     )
-    install(FILES ${ALP_INSTALL_FILES} DESTINATION ${ALP_WWW_INSTALL_DIR})
+    install(FILES ${ALP_INSTALL_FILES} DESTINATION "${ALP_WWW_INSTALL_DIR}/unittests_radix")
 endif()
