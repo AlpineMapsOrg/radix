@@ -429,9 +429,9 @@ std::array<std::array<glm::vec<3, T>, 4>, 6> quads(const radix::geometry::Aabb<3
         // Bottom face (-z)
         Face{e, h, g, f},
         // Front face (+y)
-        Face{b, f, g, c},
+        Face{d, c, g, h},
         // Back face (-y)
-        Face{a, d, h, e},
+        Face{a, e, f, b},
         // Right face (+x)
         Face{b, c, g, f},
         // Left face (-x)
