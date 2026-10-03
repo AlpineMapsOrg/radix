@@ -1,0 +1,292 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  CCACHE_BASEDIR: ${{ github.workspace }}
+  CCACHE_COMPRESS: 'true'
+  CCACHE_COMPILERCHECK: content
+  CCACHE_MAXSIZE: 500M
+  EMSCRIPTEN_VERSION: 4.0.7
+  ANDROID_NDK_VERSION: 27.3.13750724
+
+jobs:
+  linux:
+    name: Linux / ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: gcc14-release
+            cc: gcc-14
+            cxx: g++-14
+            build_type: Release
+            asan: 'OFF'
+          - name: gcc16-release
+            cc: gcc-16
+            cxx: g++-16
+            build_type: Release
+            asan: 'OFF'
+          - name: clang23-asan
+            cc: clang-23
+            cxx: clang++-23
+            build_type: RelWithDebInfo
+            asan: 'ON'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ccache ninja-build
+
+      - name: Install GCC 16
+        if: matrix.cc == 'gcc-16'
+        run: |
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc-16 g++-16
+
+      - name: Install Clang 23
+        if: matrix.cc == 'clang-23'
+        run: |
+          curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc > /dev/null
+          echo 'deb https://apt.llvm.org/noble/ llvm-toolchain-noble-23 main' | sudo tee /etc/apt/sources.list.d/llvm-23.list
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang-23 llvm-23 libclang-rt-23-dev
+
+      - name: Cache compiler output
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-ubuntu24-${{ matrix.name }}-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ccache-ubuntu24-${{ matrix.name }}-v1-
+
+      - name: Configure
+        run: >-
+          cmake -S . -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -DCMAKE_C_COMPILER=${{ matrix.cc }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DALP_UNITTESTS=ON
+          -DALP_ENABLE_ASSERTS=ON
+          -DALP_ENABLE_ADDRESS_SANITIZER=${{ matrix.asan }}
+
+      - name: Build
+        run: |
+          ccache --zero-stats
+          cmake --build build --parallel 4
+
+      - name: Run unit tests
+        timeout-minutes: 5
+        working-directory: build
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+        run: ./unittests/unittests_radix --colour-mode none | tee test.log
+
+      - name: Compiler cache statistics
+        if: always()
+        run: ccache --show-stats
+
+      - name: Upload test log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: tests-${{ matrix.name }}
+          path: build/test.log
+          retention-days: 7
+
+  windows:
+    name: Windows / MSVC 2022 Debug
+    runs-on: windows-2022
+    timeout-minutes: 20
+    env:
+      SCCACHE_VERSION: v0.16.0
+      SCCACHE_DIR: ${{ github.workspace }}/.sccache
+      SCCACHE_CACHE_SIZE: 500M
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: TheMrMilchmann/setup-msvc-dev@v4
+        with:
+          arch: x64
+          sdk: 10.0.26100.0
+
+      - name: Install sccache
+        run: |
+          $Archive = "sccache-$env:SCCACHE_VERSION-x86_64-pc-windows-msvc.zip"
+          Invoke-WebRequest -Uri "https://github.com/mozilla/sccache/releases/download/$env:SCCACHE_VERSION/$Archive" -OutFile "$env:RUNNER_TEMP/$Archive"
+          Expand-Archive -Path "$env:RUNNER_TEMP/$Archive" -DestinationPath "$env:RUNNER_TEMP/sccache"
+          $Executable = Get-ChildItem "$env:RUNNER_TEMP/sccache" -Filter sccache.exe -Recurse | Select-Object -First 1
+          $Executable.DirectoryName | Add-Content $env:GITHUB_PATH
+
+      - name: Cache compiler output
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.SCCACHE_DIR }}
+          key: sccache-windows2022-msvc-debug-${{ env.SCCACHE_VERSION }}-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            sccache-windows2022-msvc-debug-${{ env.SCCACHE_VERSION }}-v1-
+
+      - name: Configure
+        run: >-
+          cmake -S . -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_POLICY_DEFAULT_CMP0141=NEW
+          -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+          -DCMAKE_C_COMPILER_LAUNCHER=sccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+          -DALP_UNITTESTS=ON
+          -DALP_ENABLE_ASSERTS=ON
+
+      - name: Build
+        run: |
+          sccache --zero-stats
+          cmake --build build --parallel 4
+
+      - name: Run unit tests
+        timeout-minutes: 5
+        working-directory: build
+        run: |
+          ./unittests/unittests_radix.exe --colour-mode none | Tee-Object -FilePath test.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Compiler cache statistics
+        if: always()
+        run: sccache --show-stats
+
+      - name: Upload test log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: tests-msvc2022-debug
+          path: build/test.log
+          retention-days: 7
+
+  wasm:
+    name: Wasm / single-thread Release / asserts ${{ matrix.asserts }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        asserts: ['OFF', 'ON']
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ccache ninja-build
+
+      - name: Install and cache Emscripten
+        uses: mymindstorm/setup-emsdk@v15
+        with:
+          version: ${{ env.EMSCRIPTEN_VERSION }}
+          actions-cache-folder: emsdk-cache
+          cache-key: emsdk-ubuntu24-${{ env.EMSCRIPTEN_VERSION }}
+
+      - name: Cache compiler output
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-ubuntu24-emscripten-${{ env.EMSCRIPTEN_VERSION }}-st-release-asserts${{ matrix.asserts }}-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ccache-ubuntu24-emscripten-${{ env.EMSCRIPTEN_VERSION }}-st-release-asserts${{ matrix.asserts }}-v1-
+
+      - name: Configure library only
+        run: >-
+          emcmake cmake -S . -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DALP_UNITTESTS=OFF
+          -DALP_ENABLE_ASSERTS=${{ matrix.asserts }}
+
+      - name: Build library
+        run: |
+          ccache --zero-stats
+          cmake --build build --target radix --parallel 4
+
+      - name: Compiler cache statistics
+        if: always()
+        run: ccache --show-stats
+
+  android:
+    name: Android / ${{ matrix.abi }} Release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: [armeabi-v7a, arm64-v8a]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ccache ninja-build
+          # This NDK is preinstalled on ubuntu-24.04; install it if the image changes.
+          if [[ ! -d "$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION" ]]; then
+            sdkmanager "ndk;$ANDROID_NDK_VERSION"
+          fi
+
+      - name: Cache compiler output
+        uses: actions/cache@v6
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-ubuntu24-ndk-${{ env.ANDROID_NDK_VERSION }}-${{ matrix.abi }}-api28-release-asserts-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ccache-ubuntu24-ndk-${{ env.ANDROID_NDK_VERSION }}-${{ matrix.abi }}-api28-release-asserts-v1-
+
+      - name: Configure library only
+        run: >-
+          cmake -S . -B build -G Ninja
+          -DCMAKE_TOOLCHAIN_FILE="$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION/build/cmake/android.toolchain.cmake"
+          -DANDROID_ABI=${{ matrix.abi }}
+          -DANDROID_PLATFORM=android-28
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DALP_UNITTESTS=OFF
+          -DALP_ENABLE_ASSERTS=ON
+
+      - name: Build library
+        run: |
+          ccache --zero-stats
+          cmake --build build --target radix --parallel 4
+
+      - name: Compiler cache statistics
+        if: always()
+        run: ccache --show-stats
