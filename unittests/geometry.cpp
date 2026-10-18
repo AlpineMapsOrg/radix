@@ -42,22 +42,53 @@ bool test_contains(const geometry::Triangle<3, double>& triangle, const glm::dve
 
 TEST_CASE("radix/geometry::Aabb intersect")
 {
-    CHECK(intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{0, 0}, {1, 1}}));
-    CHECK(intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-1, -1}, {2, 2}}));
-    CHECK(intersect(geometry::Aabb2d{{-1, -1}, {2, 2}}, geometry::Aabb2d{{0, 0}, {1, 1}}));
-    CHECK(intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-1, 0.5}, {2, 0.8}}));
-    CHECK(intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, 0.5}, {2, 0.8}}));
-    CHECK(intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{0.5, -0.5}, {2, 0.8}}));
-    CHECK(intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, -0.5}, {2.5, 0.5}}));
-    CHECK(intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, -0.5}, {0.5, 2.0}}));
-    CHECK(intersect(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}, geometry::Aabb<3, double>{{-0.5, -0.5, -0.5}, {0.5, 2.0, 3.0}}));
+    const auto check = [](const auto& a, const auto& b, bool inclusive, bool strict) {
+        CHECK(intersect_inclusive(a, b) == inclusive);
+        CHECK(intersect_inclusive(b, a) == inclusive);
+        CHECK(intersect_strict(a, b) == strict);
+        CHECK(intersect_strict(b, a) == strict);
+    };
+    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{0, 0}, {1, 1}}, true, true);
+    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-1, -1}, {2, 2}}, true, true);
+    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-1, 0.5}, {2, 0.8}}, true, true);
+    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, 0.5}, {2, 0.8}}, true, true);
+    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{0.5, -0.5}, {2, 0.8}}, true, true);
+    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, -0.5}, {2.5, 0.5}}, true, true);
+    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, -0.5}, {0.5, 2.0}}, true, true);
+    check(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}, geometry::Aabb<3, double>{{-0.5, -0.5, -0.5}, {0.5, 2.0, 3.0}}, true, true);
 
+    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, -0.5}, {-0.2, 0.2}}, false, false);
+    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, -0.5}, {0.2, -0.2}}, false, false);
+    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{1.5, 0.5}, {1.7, 0.8}}, false, false);
+    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{0.5, 1.5}, {0.7, 1.8}}, false, false);
+    check(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}, geometry::Aabb<3, double>{{-0.5, -0.5, 1.5}, {0.5, 2.0, 3.0}}, false, false);
 
-    CHECK(!intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, -0.5}, {-0.2, 0.2}}));
-    CHECK(!intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, -0.5}, {0.2, -0.2}}));
-    CHECK(!intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{1.5, 0.5}, {1.7, 0.8}}));
-    CHECK(!intersect(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{0.5, 1.5}, {0.7, 1.8}}));
-    CHECK(!intersect(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}, geometry::Aabb<3, double>{{-0.5, -0.5, 1.5}, {0.5, 2.0, 3.0}}));
+    // Touching boxes and boxes without volume intersect only inclusively.
+    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{1, 0}, {2, 1}}, true, false);
+    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{1, 1}, {2, 2}}, true, false);
+    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{0.5, -1}, {0.5, 2}}, true, false);
+    check(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}, geometry::Aabb<3, double>{{0.2, 0.2, 0.5}, {0.8, 0.8, 0.5}}, true, false);
+    check(geometry::Aabb2i{{0, 0}, {4, 4}}, geometry::Aabb2i{{4, 0}, {8, 4}}, true, false);
+}
+
+TEST_CASE("radix/geometry::Aabb intersection")
+{
+    const geometry::Aabb<3, double> a { { 0, 0, 0 }, { 2, 2, 2 } };
+    const geometry::Aabb<3, double> b { { 1, -1, 1 }, { 3, 1, 4 } };
+    const geometry::Aabb<3, double> common { { 1, 0, 1 }, { 2, 1, 2 } };
+    CHECK(intersection_inclusive(a, b) == common);
+    CHECK(intersection_strict(a, b) == common);
+    CHECK(intersection_strict(b, a) == common);
+
+    const geometry::Aabb2i pixels { { -2, -2 }, { 3, 5 } };
+    const geometry::Aabb2i image { { 0, 0 }, { 4, 4 } };
+    CHECK(intersection_strict(pixels, image) == geometry::Aabb<2, int> { { 0, 0 }, { 3, 4 } });
+
+    const geometry::Aabb2d unit { { 0, 0 }, { 1, 1 } };
+    CHECK(intersection_inclusive(unit, geometry::Aabb2d { { 1, 0.5 }, { 2, 2 } }) == geometry::Aabb<2, double> { { 1, 0.5 }, { 1, 1 } });
+    CHECK(!intersection_strict(unit, geometry::Aabb2d { { 1, 0.5 }, { 2, 2 } }));
+    CHECK(!intersection_inclusive(unit, geometry::Aabb2d { { 1.5, 0 }, { 2, 1 } }));
+    CHECK(!intersection_strict(unit, geometry::Aabb2d { { 1.5, 0 }, { 2, 1 } }));
 }
 
 TEST_CASE("radix/geometry::Aabb::contains")

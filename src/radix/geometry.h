@@ -109,48 +109,33 @@ using Aabb3ui = Aabb<3, unsigned int>;
 using Aabb3i64 = Aabb<3, glm::int64>;
 
 
-template <typename T>
-bool intersect(const Aabb<2, T>& a, const Aabb<2, T>& b)
+/// Inclusive: the boxes share at least a point. Touching boxes and boxes without volume,
+/// e.g., the bounds of a flat triangle, intersect.
+template <glm::length_t n_dims, typename T>
+std::optional<Aabb<n_dims, T>> intersection_inclusive(const Aabb<n_dims, T>& a, const Aabb<n_dims, T>& b)
 {
-    // http://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
-    return a.min.x <= b.max.x && b.min.x <= a.max.x && a.min.y <= b.max.y && b.min.y <= a.max.y;
+    const Aabb<n_dims, T> r { glm::max(a.min, b.min), glm::min(a.max, b.max) };
+    return glm::all(glm::lessThanEqual(r.min, r.max)) ? std::optional(r) : std::nullopt;
 }
 
-template <typename T>
-bool intersect(const Aabb<3, T>& a, const Aabb<3, T>& b)
+/// Strict: the intersection has a positive extent along every axis.
+template <glm::length_t n_dims, typename T>
+std::optional<Aabb<n_dims, T>> intersection_strict(const Aabb<n_dims, T>& a, const Aabb<n_dims, T>& b)
 {
-    // http://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
-    return a.min.x <= b.max.x
-        && b.min.x <= a.max.x
-        && a.min.y <= b.max.y
-        && b.min.y <= a.max.y
-        && a.min.z <= b.max.z
-        && b.min.z <= a.max.z;
+    const Aabb<n_dims, T> r { glm::max(a.min, b.min), glm::min(a.max, b.max) };
+    return glm::all(glm::lessThan(r.min, r.max)) ? std::optional(r) : std::nullopt;
 }
 
-template <typename T>
-Aabb<2, T> intersection(const Aabb<2, T>& a, const Aabb<2, T>& b)
+template <glm::length_t n_dims, typename T>
+bool intersect_inclusive(const Aabb<n_dims, T>& a, const Aabb<n_dims, T>& b)
 {
-    Aabb<2, T> r;
-    r.min.x = std::max(a.min.x, b.min.x);
-    r.min.y = std::max(a.min.y, b.min.y);
-    r.max.x = std::min(a.max.x, b.max.x);
-    r.max.y = std::min(a.max.y, b.max.y);
-    return r;
+    return intersection_inclusive(a, b).has_value();
 }
 
-template <typename T>
-Aabb<3, T> intersection(const Aabb<3, T>& a, const Aabb<3, T>& b)
+template <glm::length_t n_dims, typename T>
+bool intersect_strict(const Aabb<n_dims, T>& a, const Aabb<n_dims, T>& b)
 {
-    Aabb<3, T> r;
-    r.min.x = std::max(a.min.x, b.min.x);
-    r.min.y = std::max(a.min.y, b.min.y);
-    r.min.z = std::max(a.min.z, b.min.z);
-
-    r.max.x = std::min(a.max.x, b.max.x);
-    r.max.y = std::min(a.max.y, b.max.y);
-    r.max.z = std::min(a.max.z, b.max.z);
-    return r;
+    return intersection_strict(a, b).has_value();
 }
 
 template <glm::length_t n_dimensions, typename T>
