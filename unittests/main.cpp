@@ -16,10 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *****************************************************************************/
 
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <limits>
-#include <array>
 
 #include <catch2/catch_session.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -30,10 +30,7 @@ constexpr bool asserts_are_enabled = false;
 constexpr bool asserts_are_enabled = true;
 #endif
 
-TEST_CASE("radix/main: check that asserts are enabled")
-{
-    CHECK(asserts_are_enabled);
-}
+TEST_CASE("radix/main: check that asserts are enabled") { CHECK(asserts_are_enabled); }
 
 TEST_CASE("radix/main: check that NaNs are enabled (-ffast-math removes support, -fno-finite-math-only puts it back in)")
 {

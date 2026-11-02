@@ -145,12 +145,10 @@ private:
     [[nodiscard]] static std::expected<std::size_t, RasterError> checked_element_count(const glm::uvec2 size) noexcept
     {
         constexpr auto max_size = std::numeric_limits<std::size_t>::max();
-        if (size.x != 0 && static_cast<std::size_t>(size.y) > max_size / size.x)
-            return std::unexpected(RasterError::IncompatibleDimensions);
+        if (size.x != 0 && static_cast<std::size_t>(size.y) > max_size / size.x) return std::unexpected(RasterError::IncompatibleDimensions);
 
         const auto count = static_cast<std::size_t>(size.x) * size.y;
-        if (count > std::vector<T>().max_size())
-            return std::unexpected(RasterError::IncompatibleDimensions);
+        if (count > std::vector<T>().max_size()) return std::unexpected(RasterError::IncompatibleDimensions);
         return count;
     }
 
@@ -271,17 +269,14 @@ namespace raster {
     template <typename T>
     [[nodiscard]] std::expected<Raster<T>, RasterError> concatenate_horizontally(const Raster<T>& left, const Raster<T>& right)
     {
-        if (left.height() != right.height())
-            return std::unexpected(RasterError::IncompatibleDimensions);
+        if (left.height() != right.height()) return std::unexpected(RasterError::IncompatibleDimensions);
 
         const auto new_width = static_cast<std::uint64_t>(left.width()) + right.width();
-        if (new_width > std::numeric_limits<unsigned>::max())
-            return std::unexpected(RasterError::IncompatibleDimensions);
+        if (new_width > std::numeric_limits<unsigned>::max()) return std::unexpected(RasterError::IncompatibleDimensions);
 
         const glm::uvec2 output_size(static_cast<unsigned>(new_width), left.height());
         Raster<T> output(output_size);
-        if (output.size() != output_size)
-            return std::unexpected(RasterError::IncompatibleDimensions);
+        if (output.size() != output_size) return std::unexpected(RasterError::IncompatibleDimensions);
 
         for (unsigned y = 0; y < left.height(); ++y) {
             auto destination = output.buffer().begin() + static_cast<std::size_t>(y) * output.width();
@@ -294,17 +289,14 @@ namespace raster {
     template <typename T>
     [[nodiscard]] std::expected<Raster<T>, RasterError> concatenate_vertically(const Raster<T>& top, const Raster<T>& bottom)
     {
-        if (top.width() != bottom.width())
-            return std::unexpected(RasterError::IncompatibleDimensions);
+        if (top.width() != bottom.width()) return std::unexpected(RasterError::IncompatibleDimensions);
 
         const auto new_height = static_cast<std::uint64_t>(top.height()) + bottom.height();
-        if (new_height > std::numeric_limits<unsigned>::max())
-            return std::unexpected(RasterError::IncompatibleDimensions);
+        if (new_height > std::numeric_limits<unsigned>::max()) return std::unexpected(RasterError::IncompatibleDimensions);
 
         const glm::uvec2 output_size(top.width(), static_cast<unsigned>(new_height));
         Raster<T> output(output_size);
-        if (output.size() != output_size)
-            return std::unexpected(RasterError::IncompatibleDimensions);
+        if (output.size() != output_size) return std::unexpected(RasterError::IncompatibleDimensions);
 
         auto destination = std::copy(top.begin(), top.end(), output.begin());
         std::copy(bottom.begin(), bottom.end(), destination);
@@ -314,23 +306,19 @@ namespace raster {
     template <typename T>
     [[nodiscard]] std::expected<Raster<T>, RasterError> concatenate_vertically(const std::span<const Raster<T>> rasters)
     {
-        if (rasters.empty())
-            return Raster<T> {};
+        if (rasters.empty()) return Raster<T> {};
 
         const auto width = rasters.front().width();
         std::uint64_t height = 0;
         for (const auto& raster : rasters) {
-            if (raster.width() != width)
-                return std::unexpected(RasterError::IncompatibleDimensions);
+            if (raster.width() != width) return std::unexpected(RasterError::IncompatibleDimensions);
             height += raster.height();
-            if (height > std::numeric_limits<unsigned>::max())
-                return std::unexpected(RasterError::IncompatibleDimensions);
+            if (height > std::numeric_limits<unsigned>::max()) return std::unexpected(RasterError::IncompatibleDimensions);
         }
 
         const glm::uvec2 output_size(width, static_cast<unsigned>(height));
         Raster<T> output(output_size);
-        if (output.size() != output_size)
-            return std::unexpected(RasterError::IncompatibleDimensions);
+        if (output.size() != output_size) return std::unexpected(RasterError::IncompatibleDimensions);
 
         auto destination = output.begin();
         for (const auto& raster : rasters)
@@ -344,9 +332,7 @@ namespace raster {
     {
         using OutputValue = std::remove_cvref_t<std::invoke_result_t<Function, const Input&>>;
         detail::transform_raster_t<OutputValue> output(input.size());
-        std::ranges::transform(input, output.begin(), [&](const Input& value) {
-            return detail::transform_value<OutputValue>(std::invoke(function, value));
-        });
+        std::ranges::transform(input, output.begin(), [&](const Input& value) { return detail::transform_value<OutputValue>(std::invoke(function, value)); });
         return output;
     }
 
@@ -371,15 +357,13 @@ namespace raster {
         -> std::expected<detail::transform_raster_t<std::remove_cvref_t<std::invoke_result_t<Function, const Input&>>>, RasterError>
     {
         using OutputValue = std::remove_cvref_t<std::invoke_result_t<Function, const Input&>>;
-        if (input.size() != mask.size())
-            return std::unexpected(RasterError::IncompatibleDimensions);
+        if (input.size() != mask.size()) return std::unexpected(RasterError::IncompatibleDimensions);
 
         detail::transform_raster_t<OutputValue> output(input.size());
         for (unsigned y = 0; y < input.height(); ++y) {
             for (unsigned x = 0; x < input.width(); ++x) {
                 const glm::uvec2 position(x, y);
-                if (mask.pixel(position) != 0)
-                    output.pixel(position) = detail::transform_value<OutputValue>(std::invoke(function, input.pixel(position)));
+                if (mask.pixel(position) != 0) output.pixel(position) = detail::transform_value<OutputValue>(std::invoke(function, input.pixel(position)));
             }
         }
         return output;
@@ -391,8 +375,7 @@ namespace raster {
         -> std::expected<detail::transform_raster_t<std::remove_cvref_t<std::invoke_result_t<Function, const Input&, glm::uvec2>>>, RasterError>
     {
         using OutputValue = std::remove_cvref_t<std::invoke_result_t<Function, const Input&, glm::uvec2>>;
-        if (input.size() != mask.size())
-            return std::unexpected(RasterError::IncompatibleDimensions);
+        if (input.size() != mask.size()) return std::unexpected(RasterError::IncompatibleDimensions);
 
         detail::transform_raster_t<OutputValue> output(input.size());
         for (unsigned y = 0; y < input.height(); ++y) {

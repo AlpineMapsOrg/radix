@@ -24,22 +24,13 @@ using namespace radix;
 namespace {
 struct DeletionChecker {
     static unsigned counter;
-    DeletionChecker()
-    {
-        counter++;
-    }
-    DeletionChecker(const DeletionChecker&)
-    {
-        counter++;
-    }
-    ~DeletionChecker()
-    {
-        counter--;
-    }
+    DeletionChecker() { counter++; }
+    DeletionChecker(const DeletionChecker&) { counter++; }
+    ~DeletionChecker() { counter--; }
     DeletionChecker& operator=(const DeletionChecker&) { return *this; }
 };
 unsigned DeletionChecker::counter = 0;
-}
+} // namespace
 
 TEST_CASE("radix/quad_tree")
 {
@@ -145,8 +136,7 @@ TEST_CASE("radix/quad_tree")
         root[2][0].addChildren({ -210, -220, -230, -240 });
 
         const auto collection = quad_tree::collectSubtreesWithLeafCondition(&root, [&](auto v) {
-            if (std::abs(v) <= 100)
-                CHECK(std::abs(v) > 100); // checks that only leaves are visited
+            if (std::abs(v) <= 100) CHECK(std::abs(v) > 100); // checks that only leaves are visited
             return v < 0;
         });
         REQUIRE(collection.size() == 2);
@@ -155,12 +145,8 @@ TEST_CASE("radix/quad_tree")
     SECTION("refine can start from root")
     {
         quad_tree::Node<int> root(1);
-        const auto refine_predicate = [](const auto& node_value) {
-            return node_value > 0;
-        };
-        const auto generate_children_function = [](const auto&) {
-            return std::array<int, 4>({ 0, 0, 0, 0 });
-        };
+        const auto refine_predicate = [](const auto& node_value) { return node_value > 0; };
+        const auto generate_children_function = [](const auto&) { return std::array<int, 4>({ 0, 0, 0, 0 }); };
         quad_tree::refine(&root, refine_predicate, generate_children_function);
         REQUIRE(root.hasChildren());
         CHECK(root.data() == 1);
@@ -180,9 +166,7 @@ TEST_CASE("radix/quad_tree")
         root[0][2].addChildren({ -5, -6, -7, -8 });
         root[0][3].addChildren({ 0, 0, 0, -1 });
 
-        const auto refine_predicate = [](const auto& node_value) {
-            return node_value > 0;
-        };
+        const auto refine_predicate = [](const auto& node_value) { return node_value > 0; };
         const auto generate_children_function = [](const auto& node_value) {
             const auto t = node_value / 4;
             const auto t2 = node_value % 4 - 1;
@@ -251,9 +235,7 @@ TEST_CASE("radix/quad_tree")
         };
         check_nodes123();
 
-        const auto reduce_predicate = [](const auto& node_value) {
-            return node_value >= 0;
-        };
+        const auto reduce_predicate = [](const auto& node_value) { return node_value >= 0; };
 
         quad_tree::reduce(&root, reduce_predicate);
         CHECK(root[0].data() == 42);
@@ -294,8 +276,7 @@ TEST_CASE("radix/quad_tree: on the fly traverse")
     };
     SECTION("do not create")
     {
-        const auto leaves = quad_tree::onTheFlyTraverse(
-            42, [](const auto&) { return false; }, generate_children_function);
+        const auto leaves = quad_tree::onTheFlyTraverse(42, [](const auto&) { return false; }, generate_children_function);
         CHECK(leaves.size() == 1);
         CHECK(leaves.front() == 42);
     }
@@ -305,14 +286,11 @@ TEST_CASE("radix/quad_tree: on the fly traverse")
         const auto leaves = quad_tree::onTheFlyTraverse(
             42,
             [&created](const auto&) {
-                if (created)
-                    return false;
+                if (created) return false;
                 created = true;
                 return true;
             },
-            [](const auto&) {
-                return std::array<int, 4>({ 1, 2, 3, 4 });
-            });
+            [](const auto&) { return std::array<int, 4>({ 1, 2, 3, 4 }); });
         CHECK(leaves.size() == 4);
         CHECK(leaves == std::vector({ 1, 2, 3, 4 }));
     }
@@ -328,10 +306,8 @@ TEST_CASE("radix/quad_tree: on the fly traverse")
             },
             [&generate_call](const auto&) {
                 generate_call++;
-                if (generate_call == 1)
-                    return std::array<int, 4>({ 1, 2, 3, 4 });
-                if (generate_call == 2)
-                    return std::array<int, 4>({ 5, 6, 7, 8 });
+                if (generate_call == 1) return std::array<int, 4>({ 1, 2, 3, 4 });
+                if (generate_call == 2) return std::array<int, 4>({ 5, 6, 7, 8 });
                 CHECK(false);
                 return std::array<int, 4>({ 11, 11, 11, 11 });
             });

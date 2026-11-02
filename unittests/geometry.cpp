@@ -34,8 +34,7 @@ bool equals(const glm::vec<n_dims, double>& a, const glm::vec<n_dims, double>& b
 
 bool test_contains(const geometry::Triangle<3, double>& triangle, const glm::dvec3& b, double scale = 1)
 {
-    return ((glm::length(triangle[0] - b) == Approx(0).scale(scale)
-        || glm::length(triangle[1] - b) == Approx(0).scale(scale)
+    return ((glm::length(triangle[0] - b) == Approx(0).scale(scale) || glm::length(triangle[1] - b) == Approx(0).scale(scale)
         || glm::length(triangle[2] - b) == Approx(0).scale(scale)));
 }
 } // namespace
@@ -48,27 +47,27 @@ TEST_CASE("radix/geometry::Aabb intersect")
         CHECK(intersect_strict(a, b) == strict);
         CHECK(intersect_strict(b, a) == strict);
     };
-    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{0, 0}, {1, 1}}, true, true);
-    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-1, -1}, {2, 2}}, true, true);
-    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-1, 0.5}, {2, 0.8}}, true, true);
-    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, 0.5}, {2, 0.8}}, true, true);
-    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{0.5, -0.5}, {2, 0.8}}, true, true);
-    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, -0.5}, {2.5, 0.5}}, true, true);
-    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, -0.5}, {0.5, 2.0}}, true, true);
-    check(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}, geometry::Aabb<3, double>{{-0.5, -0.5, -0.5}, {0.5, 2.0, 3.0}}, true, true);
+    check(geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, true, true);
+    check(geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, geometry::Aabb2d { { -1, -1 }, { 2, 2 } }, true, true);
+    check(geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, geometry::Aabb2d { { -1, 0.5 }, { 2, 0.8 } }, true, true);
+    check(geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, geometry::Aabb2d { { -0.5, 0.5 }, { 2, 0.8 } }, true, true);
+    check(geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, geometry::Aabb2d { { 0.5, -0.5 }, { 2, 0.8 } }, true, true);
+    check(geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, geometry::Aabb2d { { -0.5, -0.5 }, { 2.5, 0.5 } }, true, true);
+    check(geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, geometry::Aabb2d { { -0.5, -0.5 }, { 0.5, 2.0 } }, true, true);
+    check(geometry::Aabb<3, double> { { 0, 0, 0 }, { 1, 1, 1 } }, geometry::Aabb<3, double> { { -0.5, -0.5, -0.5 }, { 0.5, 2.0, 3.0 } }, true, true);
 
-    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, -0.5}, {-0.2, 0.2}}, false, false);
-    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{-0.5, -0.5}, {0.2, -0.2}}, false, false);
-    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{1.5, 0.5}, {1.7, 0.8}}, false, false);
-    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{0.5, 1.5}, {0.7, 1.8}}, false, false);
-    check(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}, geometry::Aabb<3, double>{{-0.5, -0.5, 1.5}, {0.5, 2.0, 3.0}}, false, false);
+    check(geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, geometry::Aabb2d { { -0.5, -0.5 }, { -0.2, 0.2 } }, false, false);
+    check(geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, geometry::Aabb2d { { -0.5, -0.5 }, { 0.2, -0.2 } }, false, false);
+    check(geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, geometry::Aabb2d { { 1.5, 0.5 }, { 1.7, 0.8 } }, false, false);
+    check(geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, geometry::Aabb2d { { 0.5, 1.5 }, { 0.7, 1.8 } }, false, false);
+    check(geometry::Aabb<3, double> { { 0, 0, 0 }, { 1, 1, 1 } }, geometry::Aabb<3, double> { { -0.5, -0.5, 1.5 }, { 0.5, 2.0, 3.0 } }, false, false);
 
     // Touching boxes and boxes without volume intersect only inclusively.
-    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{1, 0}, {2, 1}}, true, false);
-    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{1, 1}, {2, 2}}, true, false);
-    check(geometry::Aabb2d{{0, 0}, {1, 1}}, geometry::Aabb2d{{0.5, -1}, {0.5, 2}}, true, false);
-    check(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}, geometry::Aabb<3, double>{{0.2, 0.2, 0.5}, {0.8, 0.8, 0.5}}, true, false);
-    check(geometry::Aabb2i{{0, 0}, {4, 4}}, geometry::Aabb2i{{4, 0}, {8, 4}}, true, false);
+    check(geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, geometry::Aabb2d { { 1, 0 }, { 2, 1 } }, true, false);
+    check(geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, geometry::Aabb2d { { 1, 1 }, { 2, 2 } }, true, false);
+    check(geometry::Aabb2d { { 0, 0 }, { 1, 1 } }, geometry::Aabb2d { { 0.5, -1 }, { 0.5, 2 } }, true, false);
+    check(geometry::Aabb<3, double> { { 0, 0, 0 }, { 1, 1, 1 } }, geometry::Aabb<3, double> { { 0.2, 0.2, 0.5 }, { 0.8, 0.8, 0.5 } }, true, false);
+    check(geometry::Aabb2i { { 0, 0 }, { 4, 4 } }, geometry::Aabb2i { { 4, 0 }, { 8, 4 } }, true, false);
 }
 
 TEST_CASE("radix/geometry::Aabb intersection")
@@ -93,10 +92,10 @@ TEST_CASE("radix/geometry::Aabb intersection")
 
 TEST_CASE("radix/geometry::Aabb::contains")
 {
-    CHECK(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}.contains({0.5, 0.5, 0.5}));
-    CHECK(geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}.contains({0.0, 0.0, 0.0}));
-    CHECK(!geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}.contains({1.0, 1.0, 1.0}));
-    CHECK(!geometry::Aabb<3, double>{{0, 0, 0}, {1, 1, 1}}.contains({1.5, 0.5, 0.5}));
+    CHECK(geometry::Aabb<3, double> { { 0, 0, 0 }, { 1, 1, 1 } }.contains({ 0.5, 0.5, 0.5 }));
+    CHECK(geometry::Aabb<3, double> { { 0, 0, 0 }, { 1, 1, 1 } }.contains({ 0.0, 0.0, 0.0 }));
+    CHECK(!geometry::Aabb<3, double> { { 0, 0, 0 }, { 1, 1, 1 } }.contains({ 1.0, 1.0, 1.0 }));
+    CHECK(!geometry::Aabb<3, double> { { 0, 0, 0 }, { 1, 1, 1 } }.contains({ 1.5, 0.5, 0.5 }));
 }
 
 TEST_CASE("radix/geometry")
@@ -110,11 +109,15 @@ TEST_CASE("radix/geometry")
 
         CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 0.0, 0.0, 0.0 }, .max = { 1.0, 1.0, 1.0 } }, glm::dvec3(0, 0, 0)) == Approx(0));
         CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 0.0, 0.0, 0.0 }, .max = { 1.0, 1.0, 1.0 } }, glm::dvec3(-1, 0, 0)) == Approx(1));
-        CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 0.0, 1.0, 0.0 }, .max = { 1.0, 2.0, 1.0 } }, glm::dvec3(-1, 0, 0)) == Approx(std::sqrt(2)));
-        CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 0.0, 1.0, 2.0 }, .max = { 1.0, 2.0, 1.0 } }, glm::dvec3(-1, 0, 1)) == Approx(std::sqrt(3)));
+        CHECK(
+            geometry::distance(geometry::Aabb<3, double> { .min = { 0.0, 1.0, 0.0 }, .max = { 1.0, 2.0, 1.0 } }, glm::dvec3(-1, 0, 0)) == Approx(std::sqrt(2)));
+        CHECK(
+            geometry::distance(geometry::Aabb<3, double> { .min = { 0.0, 1.0, 2.0 }, .max = { 1.0, 2.0, 1.0 } }, glm::dvec3(-1, 0, 1)) == Approx(std::sqrt(3)));
         CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 0.0, 0.0, 0.0 }, .max = { 1.0, 1.0, 1.0 } }, glm::dvec3(2, 0, 0)) == Approx(1));
-        CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 10.0, 10.0, 10.0 }, .max = { 22.0, 22.0, 22.0 } }, glm::dvec3(0, 0, 0)) == Approx(std::sqrt(300)));
-        CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 10.0, 10.0, 10.0 }, .max = { 22.0, 22.0, 22.0 } }, glm::dvec3(23, 23, 23)) == Approx(std::sqrt(3)));
+        CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 10.0, 10.0, 10.0 }, .max = { 22.0, 22.0, 22.0 } }, glm::dvec3(0, 0, 0))
+            == Approx(std::sqrt(300)));
+        CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 10.0, 10.0, 10.0 }, .max = { 22.0, 22.0, 22.0 } }, glm::dvec3(23, 23, 23))
+            == Approx(std::sqrt(3)));
         CHECK(geometry::distance(geometry::Aabb<3, double> { .min = { 10.0, 10.0, 10.0 }, .max = { 22.0, 22.0, 22.0 } }, glm::dvec3(23, 22, 22)) == Approx(1));
     }
     SECTION("aabb size")
@@ -146,18 +149,12 @@ TEST_CASE("radix/geometry")
         for (const auto& tri : triangles) {
             for (unsigned i = 0; i < 3; ++i) {
                 CHECK(((tri[i].x == 0.0 || tri[i].x == 10.0) && (tri[i].y == 1.0 || tri[i].y == 11.0) && (tri[i].z == 2.0 || tri[i].z == 12.0)));
-                if (tri[i].x == 0.0)
-                    cnt_minx++;
-                if (tri[i].x == 10.0)
-                    cnt_maxx++;
-                if (tri[i].y == 1.0)
-                    cnt_miny++;
-                if (tri[i].y == 11.0)
-                    cnt_maxy++;
-                if (tri[i].z == 2.0)
-                    cnt_minz++;
-                if (tri[i].z == 12.0)
-                    cnt_maxz++;
+                if (tri[i].x == 0.0) cnt_minx++;
+                if (tri[i].x == 10.0) cnt_maxx++;
+                if (tri[i].y == 1.0) cnt_miny++;
+                if (tri[i].y == 11.0) cnt_maxy++;
+                if (tri[i].z == 2.0) cnt_minz++;
+                if (tri[i].z == 12.0) cnt_maxz++;
             }
             const auto normal = geometry::normal(tri);
             const auto centroid_a = glm::normalize(tri[0] - centroid);
@@ -184,50 +181,59 @@ TEST_CASE("radix/geometry")
         CHECK(geometry::distance(plane, { 2.0, 2.0, 2.0 }) == Approx(std::sqrt(3)).scale(1.0));
         CHECK(geometry::distance(plane, { 0.0, 0.0, 0.0 }) == Approx(-std::sqrt(3)).scale(1.0));
         {
-            const auto intersection = geometry::intersection(geometry::Edge<3, double>{ glm::dvec3 { 0.0, 0.0, 0.0 }, glm::dvec3 { 2.0, 2.0, 2.0 } }, plane);
+            const auto intersection = geometry::intersection(geometry::Edge<3, double> { glm::dvec3 { 0.0, 0.0, 0.0 }, glm::dvec3 { 2.0, 2.0, 2.0 } }, plane);
             CHECK(intersection.x == Approx(1.0));
             CHECK(intersection.y == Approx(1.0));
             CHECK(intersection.z == Approx(1.0));
         }
         {
-            const auto intersection = geometry::intersection(geometry::Edge<3, double>{ glm::dvec3 { 4.0, 4.0, 4.0 }, glm::dvec3 { -1.0, -1.0, -1.0 } }, plane);
+            const auto intersection
+                = geometry::intersection(geometry::Edge<3, double> { glm::dvec3 { 4.0, 4.0, 4.0 }, glm::dvec3 { -1.0, -1.0, -1.0 } }, plane);
             CHECK(intersection.x == Approx(1.0));
             CHECK(intersection.y == Approx(1.0));
             CHECK(intersection.z == Approx(1.0));
         }
     }
 
-    SECTION("plane plane intersection") {
-        CHECK(!geometry::intersection(geometry::Plane<double> {glm::dvec3 { 1.0, 0.0, 0.0 }, 1 }, geometry::Plane<double> {glm::dvec3 { 1.0, 0.0, 0.0 }, -1}));
+    SECTION("plane plane intersection")
+    {
+        CHECK(
+            !geometry::intersection(geometry::Plane<double> { glm::dvec3 { 1.0, 0.0, 0.0 }, 1 }, geometry::Plane<double> { glm::dvec3 { 1.0, 0.0, 0.0 }, -1 }));
 
         {
-            const auto i = geometry::intersection(geometry::Plane<double> {glm::dvec3 { 1.0, 0.0, 0.0 }, -1 }, geometry::Plane<double> {glm::dvec3 { 0.0, -1.0, 0.0 }, -2});
+            const auto i = geometry::intersection(
+                geometry::Plane<double> { glm::dvec3 { 1.0, 0.0, 0.0 }, -1 }, geometry::Plane<double> { glm::dvec3 { 0.0, -1.0, 0.0 }, -2 });
             REQUIRE(i);
-            CHECK(equals(i.value().direction, glm::dvec3{0, 0, -1}));
-            CHECK(equals(i.value().point, glm::dvec3{1, -2, 0}));
+            CHECK(equals(i.value().direction, glm::dvec3 { 0, 0, -1 }));
+            CHECK(equals(i.value().point, glm::dvec3 { 1, -2, 0 }));
         }
         {
-            const auto i = geometry::intersection(geometry::Plane<double> {glm::dvec3 { 0.0, 0.0, 1.0 }, 5 }, geometry::Plane<double> {glm::dvec3 { 0.0, 1.0, 0.0 }, -1});
+            const auto i = geometry::intersection(
+                geometry::Plane<double> { glm::dvec3 { 0.0, 0.0, 1.0 }, 5 }, geometry::Plane<double> { glm::dvec3 { 0.0, 1.0, 0.0 }, -1 });
             REQUIRE(i);
-            CHECK(equals(i.value().direction, glm::dvec3{-1, 0, 0}));
-            CHECK(equals(i.value().point, glm::dvec3{0, 1, -5}));
+            CHECK(equals(i.value().direction, glm::dvec3 { -1, 0, 0 }));
+            CHECK(equals(i.value().point, glm::dvec3 { 0, 1, -5 }));
         }
     }
 
-    SECTION("line plane intersection") {
-        CHECK(!geometry::intersection(geometry::Line<3, double> {glm::dvec3 { 0.0, 0.0, 0.0 }, glm::dvec3 { 0.0, 1.0, 0.0 } }, geometry::Plane<double> {glm::dvec3 { 0.0, 0.0, 1.0 }, -1}));
+    SECTION("line plane intersection")
+    {
+        CHECK(!geometry::intersection(geometry::Line<3, double> { glm::dvec3 { 0.0, 0.0, 0.0 }, glm::dvec3 { 0.0, 1.0, 0.0 } },
+            geometry::Plane<double> { glm::dvec3 { 0.0, 0.0, 1.0 }, -1 }));
 
         {
-            const auto i = geometry::intersection(geometry::Line<3, double> {.point = glm::dvec3 { 0.0, 0.0, 0.0 }, .direction = glm::dvec3 { 0.0, 0.0, 1.0 } },
-                                                  geometry::Plane<double> {glm::dvec3 { 0.0, 0.0, 1.0 }, -1});
+            const auto i
+                = geometry::intersection(geometry::Line<3, double> { .point = glm::dvec3 { 0.0, 0.0, 0.0 }, .direction = glm::dvec3 { 0.0, 0.0, 1.0 } },
+                    geometry::Plane<double> { glm::dvec3 { 0.0, 0.0, 1.0 }, -1 });
             REQUIRE(i);
-            CHECK(equals(i.value(), glm::dvec3{0, 0, 1}));
+            CHECK(equals(i.value(), glm::dvec3 { 0, 0, 1 }));
         }
         {
-            const auto i = geometry::intersection(geometry::Line<3, double> {.point = glm::dvec3 { 2.0, 2.0, 2.0 }, .direction = glm::normalize(glm::dvec3 { 1.0, 1.0, 1.0 }) },
-                                                  geometry::Plane<double> {glm::normalize(glm::dvec3 { 1.0, 2.0, 3.0 }), 0});
+            const auto i = geometry::intersection(
+                geometry::Line<3, double> { .point = glm::dvec3 { 2.0, 2.0, 2.0 }, .direction = glm::normalize(glm::dvec3 { 1.0, 1.0, 1.0 }) },
+                geometry::Plane<double> { glm::normalize(glm::dvec3 { 1.0, 2.0, 3.0 }), 0 });
             REQUIRE(i);
-            CHECK(equals(i.value(), glm::dvec3{0, 0, 0}));
+            CHECK(equals(i.value(), glm::dvec3 { 0, 0, 0 }));
         }
     }
 

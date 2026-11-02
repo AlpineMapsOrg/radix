@@ -44,7 +44,7 @@ radix::tile::Id decode_key(radix::TileHeights::KeyType key)
     const auto zoom = uint32_t(key);
     return { zoom, { coords_x, coords_y } };
 }
-}
+} // namespace
 
 namespace radix {
 TileHeights::TileHeights() = default;
@@ -87,14 +87,12 @@ TileHeights TileHeights::read_from(const std::filesystem::path& path)
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     std::streamsize size = file.tellg();
 
-    if (size > std::streamsize(1024 * 1024 * 200))
-        return {};
+    if (size > std::streamsize(1024 * 1024 * 200)) return {};
 
     file.seekg(0, std::ios::beg);
 
     std::vector<std::byte> buffer(size);
-    if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
-        return {};
+    if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) return {};
 
     return deserialise(buffer);
 }

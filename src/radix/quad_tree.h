@@ -21,9 +21,9 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <iterator>
 #include <memory>
 #include <vector>
-#include <iterator>
 
 using std::size_t;
 
@@ -122,15 +122,13 @@ template <typename DataType, typename Predicate>
 std::vector<Node<DataType>*> collectSubtreesWithLeafCondition(Node<DataType>* root, const Predicate& check_leaf)
 {
     if (!root->hasChildren()) {
-        if (check_leaf(root->data()))
-            return { root };
+        if (check_leaf(root->data())) return { root };
         return {};
     }
     auto all_leaves_match_condition = true;
     const auto visitor = [&check_leaf, &all_leaves_match_condition](const auto& node_data) { all_leaves_match_condition &= check_leaf(node_data); };
     visitLeaves(root, visitor);
-    if (all_leaves_match_condition)
-        return { root };
+    if (all_leaves_match_condition) return { root };
 
     std::vector<Node<DataType>*> subtrees;
     for (const auto& child : *root) {
@@ -145,11 +143,9 @@ void refine(Node<DataType>* root, const PredicateFunction& node_needs_refinement
 {
     using QuadTreeNodePtr = std::unique_ptr<Node<DataType>>;
 
-    if (!root->hasChildren() && node_needs_refinement(root->data()))
-        root->addChildren(generate_children(root->data()));
+    if (!root->hasChildren() && node_needs_refinement(root->data())) root->addChildren(generate_children(root->data()));
 
-    if (!root->hasChildren())
-        return;
+    if (!root->hasChildren()) return;
 
     for (QuadTreeNodePtr& node : *root) {
         assert(node);
@@ -162,8 +158,7 @@ template <typename DataType, typename PredicateFunction>
 void reduce(Node<DataType>* root, const PredicateFunction& node_needs_refinement)
 {
     using QuadTreeNodePtr = std::unique_ptr<Node<DataType>>;
-    if (!root->hasChildren())
-        return;
+    if (!root->hasChildren()) return;
     auto remove_children = !node_needs_refinement(root->data());
     if (remove_children) {
         root->removeChildren();
@@ -178,8 +173,7 @@ void reduce(Node<DataType>* root, const PredicateFunction& node_needs_refinement
 template <typename DataType>
 void Node<DataType>::addChildren(const std::array<DataType, 4>& data)
 {
-    if (m_children_present)
-        return;
+    if (m_children_present) return;
 
     m_children_present = true;
     std::transform(data.begin(), data.end(), m_children.begin(), [](const auto& data) { return std::make_unique<Node>(data); });
@@ -188,8 +182,7 @@ void Node<DataType>::addChildren(const std::array<DataType, 4>& data)
 template <typename DataType>
 void Node<DataType>::removeChildren()
 {
-    if (!m_children_present)
-        return;
+    if (!m_children_present) return;
 
     m_children_present = false;
     for (auto& ch : m_children) {

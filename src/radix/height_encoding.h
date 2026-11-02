@@ -36,7 +36,7 @@ inline glm::u8vec3 to_rgb(float height)
     const auto scaled = unsigned(std::lround(height * scaling_factor));
     const auto r = (scaled >> 8u) & 255u;
     const auto g = scaled & 255u;
-    return {glm::u8(r), glm::u8(g), 0};
+    return { glm::u8(r), glm::u8(g), 0 };
 }
 
 inline float to_float(glm::u8vec3 v)

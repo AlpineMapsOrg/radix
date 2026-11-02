@@ -32,10 +32,7 @@ namespace radix::tile {
 using SrsBounds = geometry::Aabb2<double>;
 using SrsAndHeightBounds = geometry::Aabb<3, double>;
 
-enum class Border {
-    Yes = 1,
-    No = 0
-};
+enum class Border { Yes = 1, No = 0 };
 
 enum class QuadPosition : unsigned { TopLeft = 0, TopRight, BottomLeft, BottomRight };
 
@@ -58,14 +55,8 @@ struct Id {
         // clang-format on
     }
     bool operator==(const Id& other) const = default;
-    bool operator<(const Id& other) const
-    {
-        return std::tie(zoom_level, coords.x, coords.y) < std::tie(other.zoom_level, other.coords.x, other.coords.y);
-    }
-    operator std::tuple<unsigned, unsigned, unsigned>() const
-    {
-        return std::make_tuple(zoom_level, coords.x, coords.y);
-    }
+    bool operator<(const Id& other) const { return std::tie(zoom_level, coords.x, coords.y) < std::tie(other.zoom_level, other.coords.x, other.coords.y); }
+    operator std::tuple<unsigned, unsigned, unsigned>() const { return std::make_tuple(zoom_level, coords.x, coords.y); }
 
     using Hasher = typename hasher::for_tuple<unsigned, unsigned, unsigned>;
 };
@@ -81,7 +72,8 @@ inline QuadPosition quad_position(const Id& id)
 }
 
 using IdSet = std::unordered_set<tile::Id, tile::Id::Hasher>;
-template <typename T> using IdMap = std::unordered_map<tile::Id, T, tile::Id::Hasher>;
+template <typename T>
+using IdMap = std::unordered_map<tile::Id, T, tile::Id::Hasher>;
 
 inline std::string to_string(const Id& value)
 {
@@ -91,8 +83,7 @@ inline std::string to_string(const Id& value)
 // helper for catch2
 inline std::ostream& operator<<(std::ostream& os, const Id& value)
 {
-    os << "{"
-       << value.zoom_level << ", {" << value.coords.x << ", " << value.coords.y << "}"
+    os << "{" << value.zoom_level << ", {" << value.coords.x << ", " << value.coords.y << "}"
        << "}";
     return os;
 }

@@ -170,8 +170,7 @@ TEST_CASE("radix raster vertically concatenates a range")
         radix::Raster<int>({ 0, std::numeric_limits<unsigned>::max() }),
         radix::Raster<int>({ 0, 1 }),
     };
-    const auto excessive_height_result
-        = radix::raster::concatenate_vertically(std::span<const radix::Raster<int>>(excessive_height));
+    const auto excessive_height_result = radix::raster::concatenate_vertically(std::span<const radix::Raster<int>>(excessive_height));
     CHECK_FALSE(excessive_height_result.has_value());
     CHECK(excessive_height_result.error() == radix::RasterError::IncompatibleDimensions);
 }
@@ -251,8 +250,7 @@ TEST_CASE("radix RasterMask uses normalized contiguous bytes")
     static_assert(std::same_as<decltype(values), const radix::Raster<int>>);
     CHECK(std::ranges::equal(values.buffer(), input.buffer()));
 
-    const auto coordinate_mask
-        = radix::raster::transform(input, [](const int, const glm::uvec2 position) { return position.x == 1; });
+    const auto coordinate_mask = radix::raster::transform(input, [](const int, const glm::uvec2 position) { return position.x == 1; });
     static_assert(std::same_as<decltype(coordinate_mask), const radix::RasterMask>);
     CHECK(std::ranges::equal(coordinate_mask.buffer(), std::array<std::uint8_t, 3> { 0, 1, 0 }));
 }

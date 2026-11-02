@@ -57,9 +57,10 @@ private:
 };
 
 template <typename Container>
-[[nodiscard]] unordered_insert_iterator<Container> unordered_inserter(Container& container) // usually I would prefer Container*, but let's stay compatible with the stl here (yes/no?)
+[[nodiscard]] unordered_insert_iterator<Container> unordered_inserter(
+    Container& container) // usually I would prefer Container*, but let's stay compatible with the stl here (yes/no?)
 {
     return unordered_insert_iterator<Container>(container);
 }
 
-}
+} // namespace radix

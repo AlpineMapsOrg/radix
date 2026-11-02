@@ -42,8 +42,7 @@ TEST_CASE("radix/tile::Id/children")
 
     const auto array_contains = [](const std::array<tile::Id, 4>& array, const tile::Id& id) {
         for (const auto& e : array) {
-            if (e == id)
-                return true;
+            if (e == id) return true;
         }
         return false;
     };
@@ -51,7 +50,7 @@ TEST_CASE("radix/tile::Id/children")
     SECTION("mercator")
     {
         {
-            const auto tiles = tile::Id{0, {0, 0}}.children();
+            const auto tiles = tile::Id { 0, { 0, 0 } }.children();
             REQUIRE(tiles.size() == 4);
             CHECK(array_contains(tiles, { 1, { 0, 0 } }));
             CHECK(array_contains(tiles, { 1, { 1, 0 } }));
@@ -59,7 +58,7 @@ TEST_CASE("radix/tile::Id/children")
             CHECK(array_contains(tiles, { 1, { 1, 1 } }));
         }
         {
-            const auto tiles = tile::Id{1, {1, 0}}.children();
+            const auto tiles = tile::Id { 1, { 1, 0 } }.children();
             REQUIRE(tiles.size() == 4);
             CHECK(array_contains(tiles, { 2, { 2, 1 } }));
             CHECK(array_contains(tiles, { 2, { 3, 1 } }));
@@ -70,7 +69,7 @@ TEST_CASE("radix/tile::Id/children")
     SECTION("geodetic")
     {
         {
-            const auto tiles = tile::Id{0, {1, 0}}.children();
+            const auto tiles = tile::Id { 0, { 1, 0 } }.children();
             REQUIRE(tiles.size() == 4);
             CHECK(array_contains(tiles, { 1, { 2, 1 } }));
             CHECK(array_contains(tiles, { 1, { 3, 1 } }));
@@ -78,7 +77,7 @@ TEST_CASE("radix/tile::Id/children")
             CHECK(array_contains(tiles, { 1, { 3, 0 } }));
         }
         {
-            const auto tiles = tile::Id{1, {3, 1}}.children();
+            const auto tiles = tile::Id { 1, { 3, 1 } }.children();
             REQUIRE(tiles.size() == 4);
             CHECK(array_contains(tiles, { 2, { 6, 3 } }));
             CHECK(array_contains(tiles, { 2, { 7, 3 } }));

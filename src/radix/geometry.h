@@ -23,15 +23,15 @@
 #include <array>
 #include <iterator>
 #include <optional>
-#include <vector>
 #include <span>
+#include <vector>
 
 #include <glm/glm.hpp>
 
 namespace radix::geometry {
 
 template <typename T = double>
-    requires std::is_floating_point_v<T>
+requires std::is_floating_point_v<T>
 inline constexpr T epsilon = 0.0000001;
 
 template <>
@@ -47,27 +47,23 @@ public:
 
     bool operator==(const Aabb<n_dims, T>& other) const = default;
 
-    [[nodiscard]] glm::vec<n_dims, T> size() const { return max - min;
-    }
-    [[nodiscard]] glm::vec<n_dims, T> centre() const {
-        return min + size() / T(2);
-    }
-    
-    [[nodiscard]] bool contains(const Vec& point) const {
-        return glm::all(glm::lessThanEqual(min, point)) && glm::all(glm::greaterThan(max, point));
-    }
-    [[nodiscard]] bool contains_inclusive(const Vec &point) const {
+    [[nodiscard]] glm::vec<n_dims, T> size() const { return max - min; }
+    [[nodiscard]] glm::vec<n_dims, T> centre() const { return min + size() / T(2); }
+
+    [[nodiscard]] bool contains(const Vec& point) const { return glm::all(glm::lessThanEqual(min, point)) && glm::all(glm::greaterThan(max, point)); }
+    [[nodiscard]] bool contains_inclusive(const Vec& point) const
+    {
         return glm::all(glm::lessThanEqual(min, point)) && glm::all(glm::greaterThanEqual(max, point));
     }
-    [[nodiscard]] bool contains_exclusive(const Vec &point) const {
-        return glm::all(glm::lessThan(min, point)) && glm::all(glm::greaterThan(max, point));
-    }
+    [[nodiscard]] bool contains_exclusive(const Vec& point) const { return glm::all(glm::lessThan(min, point)) && glm::all(glm::greaterThan(max, point)); }
 
-    void expand_by(const Vec &point) {
+    void expand_by(const Vec& point)
+    {
         this->min = glm::min(this->min, point);
         this->max = glm::max(this->max, point);
     }
-    void expand_by(const Aabb<n_dims, T> &other) {
+    void expand_by(const Aabb<n_dims, T>& other)
+    {
         this->min = glm::min(this->min, other.min);
         this->max = glm::max(this->max, other.max);
     }
@@ -77,18 +73,24 @@ template <class T>
 class Aabb2 : public Aabb<2, T> {
     using Base = Aabb<2, T>;
     using Vec = glm::vec<2, T>;
+
 public:
-    using Base::min;
     using Base::max;
+    using Base::min;
     Aabb2() = default;
-    Aabb2(const Vec& min, const Vec& max) : Base{min, max} {}
-    template <typename D>
-    Aabb2(const geometry::Aabb<2, D>& other)
-        : Base { Vec(other.min), Vec(other.max) } {
+    Aabb2(const Vec& min, const Vec& max)
+        : Base { min, max }
+    {
     }
     template <typename D>
-    Aabb2(const geometry::Aabb<3, D> &other)
-        : Base{Vec(other.min), Vec(other.max)} {
+    Aabb2(const geometry::Aabb<2, D>& other)
+        : Base { Vec(other.min), Vec(other.max) }
+    {
+    }
+    template <typename D>
+    Aabb2(const geometry::Aabb<3, D>& other)
+        : Base { Vec(other.min), Vec(other.max) }
+    {
     }
 
     [[nodiscard]] T width() const { return max.x - min.x; }
@@ -101,13 +103,11 @@ using Aabb2i = Aabb2<int>;
 using Aabb2ui = Aabb2<unsigned int>;
 using Aabb2i64 = Aabb2<glm::int64>;
 
-
 using Aabb3d = Aabb<3, double>;
 using Aabb3f = Aabb<3, float>;
 using Aabb3i = Aabb<3, int>;
 using Aabb3ui = Aabb<3, unsigned int>;
 using Aabb3i64 = Aabb<3, glm::int64>;
-
 
 /// Inclusive: the boxes share at least a point. Touching boxes and boxes without volume,
 /// e.g., the bounds of a flat triangle, intersect.
@@ -224,8 +224,7 @@ std::optional<glm::tvec3<T>> intersection(const Line<3, T>& line, const Plane<T>
 {
     // adapted from https://gabrielgambetta.com/computer-graphics-from-scratch/11-clipping.html
     const auto dot = glm::dot(plane.normal, line.direction);
-    if (std::abs(dot) < epsilon<T>)
-        return {};
+    if (std::abs(dot) < epsilon<T>) return {};
     T t = (-plane.distance - glm::dot(plane.normal, line.point)) / dot;
     return line.point + t * line.direction;
 }
@@ -234,9 +233,8 @@ template <typename T>
 glm::tvec3<T> intersection(const Edge<3, T>& line, const Plane<T>& plane)
 {
     const auto direction = line[1] - line[0];
-    return intersection(Line{line[0], direction}, plane).value();
+    return intersection(Line { line[0], direction }, plane).value();
 }
-
 
 template <typename T>
 std::optional<Line<3, T>> intersection(const Plane<T>& p1, const Plane<T>& p2)
@@ -248,13 +246,11 @@ std::optional<Line<3, T>> intersection(const Plane<T>& p1, const Plane<T>& p2)
     const auto det = glm::dot(p3_normal, p3_normal);
 
     // If the determinant is 0, that means parallel planes, no intersection.
-    if (std::abs(det) <= epsilon<T>)
-        return {};
+    if (std::abs(det) <= epsilon<T>) return {};
 
     // calculate the final (point, normal)
-    const auto r_point = ((glm::cross(p3_normal, p2.normal) * p1.distance) +
-                          (glm::cross(p1.normal, p3_normal) * p2.distance)) / det;
-    return Line<3, T>{r_point, p3_normal};
+    const auto r_point = ((glm::cross(p3_normal, p2.normal) * p1.distance) + (glm::cross(p1.normal, p3_normal) * p2.distance)) / det;
+    return Line<3, T> { r_point, p3_normal };
 }
 
 template <typename T>
@@ -262,8 +258,8 @@ std::vector<Triangle<3, T>> clip(const Triangle<3, T>& triangle, const Plane<T>&
 {
     using Tri = Triangle<3, T>;
     const auto triangles_2in = [&plane](const glm::tvec3<T>& inside_a, const glm::tvec3<T>& inside_b, const glm::tvec3<T>& outside_c) {
-        const auto a_prime = intersection(geometry::Edge<3, T>{ inside_a, outside_c }, plane);
-        const auto b_prime = intersection(geometry::Edge<3, T>{ inside_b, outside_c }, plane);
+        const auto a_prime = intersection(geometry::Edge<3, T> { inside_a, outside_c }, plane);
+        const auto b_prime = intersection(geometry::Edge<3, T> { inside_b, outside_c }, plane);
         return std::vector<Tri>({ Tri { inside_a, inside_b, b_prime }, Tri { inside_a, b_prime, a_prime } });
     };
 
@@ -271,24 +267,26 @@ std::vector<Triangle<3, T>> clip(const Triangle<3, T>& triangle, const Plane<T>&
     const auto b1 = distance(plane, triangle[1]) > 0;
     const auto b2 = distance(plane, triangle[2]) > 0;
     const auto s = b0 + b1 + b2;
-    if (s == 3)
-        return { triangle };
+    if (s == 3) return { triangle };
     if (s == 2) {
-        if (!b0)
-            return triangles_2in(triangle[1], triangle[2], triangle[0]);
-        if (!b1)
-            return triangles_2in(triangle[2], triangle[0], triangle[1]);
-        if (!b2)
-            return triangles_2in(triangle[0], triangle[1], triangle[2]);
+        if (!b0) return triangles_2in(triangle[1], triangle[2], triangle[0]);
+        if (!b1) return triangles_2in(triangle[2], triangle[0], triangle[1]);
+        if (!b2) return triangles_2in(triangle[0], triangle[1], triangle[2]);
         assert(false);
     }
     if (s == 1) {
         if (b0)
-            return { { triangle[0], intersection(geometry::Edge<3, T>{ triangle[0], triangle[1] }, plane), intersection(geometry::Edge<3, T>{ triangle[0], triangle[2] }, plane) } };
+            return { { triangle[0],
+                intersection(geometry::Edge<3, T> { triangle[0], triangle[1] }, plane),
+                intersection(geometry::Edge<3, T> { triangle[0], triangle[2] }, plane) } };
         if (b1)
-            return { { intersection(geometry::Edge<3, T>{ triangle[0], triangle[1] }, plane), triangle[1], intersection(geometry::Edge<3, T>{ triangle[1], triangle[2] }, plane) } };
+            return { { intersection(geometry::Edge<3, T> { triangle[0], triangle[1] }, plane),
+                triangle[1],
+                intersection(geometry::Edge<3, T> { triangle[1], triangle[2] }, plane) } };
         if (b2)
-            return { { intersection(geometry::Edge<3, T>{ triangle[0], triangle[2] }, plane), intersection(geometry::Edge<3, T>{ triangle[1], triangle[2] }, plane), triangle[2] } };
+            return { { intersection(geometry::Edge<3, T> { triangle[0], triangle[2] }, plane),
+                intersection(geometry::Edge<3, T> { triangle[1], triangle[2] }, plane),
+                triangle[2] } };
         assert(false);
     }
     return {};
@@ -331,102 +329,110 @@ std::vector<Triangle<3, T>> triangulise(const Aabb<3, T>& box)
     const auto g = Vert { box.max.x, box.max.y, box.min.z };
     const auto h = Vert { box.min.x, box.max.y, box.min.z };
 
-    return std::vector<Tri>({ { a, b, c }, { a, c, d },
-        { a, e, b }, { b, e, f },
-        { b, f, c }, { c, f, g },
-        { c, g, d }, { d, g, h },
-        { d, h, a }, { a, h, e },
-        { e, g, f }, { e, h, g } });
+    return std::vector<Tri>({ { a, b, c },
+        { a, c, d },
+        { a, e, b },
+        { b, e, f },
+        { b, f, c },
+        { c, f, g },
+        { c, g, d },
+        { d, g, h },
+        { d, h, a },
+        { a, h, e },
+        { e, g, f },
+        { e, h, g } });
 }
 
-template<typename T>
-std::array<glm::vec<3, T>, 8> corners(const Aabb<3, T> &box)
+template <typename T>
+std::array<glm::vec<3, T>, 8> corners(const Aabb<3, T>& box)
 {
     using Vert = glm::vec<3, T>;
 
     // counter clockwise top face
-    const auto a = Vert{box.min.x, box.min.y, box.max.z};
-    const auto b = Vert{box.max.x, box.min.y, box.max.z};
-    const auto c = Vert{box.max.x, box.max.y, box.max.z};
-    const auto d = Vert{box.min.x, box.max.y, box.max.z};
+    const auto a = Vert { box.min.x, box.min.y, box.max.z };
+    const auto b = Vert { box.max.x, box.min.y, box.max.z };
+    const auto c = Vert { box.max.x, box.max.y, box.max.z };
+    const auto d = Vert { box.min.x, box.max.y, box.max.z };
     // ccw bottom face, normal points up
-    const auto e = Vert{box.min.x, box.min.y, box.min.z};
-    const auto f = Vert{box.max.x, box.min.y, box.min.z};
-    const auto g = Vert{box.max.x, box.max.y, box.min.z};
-    const auto h = Vert{box.min.x, box.max.y, box.min.z};
+    const auto e = Vert { box.min.x, box.min.y, box.min.z };
+    const auto f = Vert { box.max.x, box.min.y, box.min.z };
+    const auto g = Vert { box.max.x, box.max.y, box.min.z };
+    const auto h = Vert { box.min.x, box.max.y, box.min.z };
 
-    return {a, b, c, d, e, f, g, h};
+    return { a, b, c, d, e, f, g, h };
 }
 
 template <typename T>
-std::array<radix::geometry::Edge<3, T>, 12> edges(const radix::geometry::Aabb<3, T> &box) {
+std::array<radix::geometry::Edge<3, T>, 12> edges(const radix::geometry::Aabb<3, T>& box)
+{
     using Vert = glm::vec<3, T>;
     using Edge = radix::geometry::Edge<3, T>;
 
     // counter clockwise top face
-    const auto a = Vert{box.min.x, box.min.y, box.max.z};
-    const auto b = Vert{box.max.x, box.min.y, box.max.z};
-    const auto c = Vert{box.max.x, box.max.y, box.max.z};
-    const auto d = Vert{box.min.x, box.max.y, box.max.z};
+    const auto a = Vert { box.min.x, box.min.y, box.max.z };
+    const auto b = Vert { box.max.x, box.min.y, box.max.z };
+    const auto c = Vert { box.max.x, box.max.y, box.max.z };
+    const auto d = Vert { box.min.x, box.max.y, box.max.z };
 
     // counter clockwise bottom face, normal points up
-    const auto e = Vert{box.min.x, box.min.y, box.min.z};
-    const auto f = Vert{box.max.x, box.min.y, box.min.z};
-    const auto g = Vert{box.max.x, box.max.y, box.min.z};
-    const auto h = Vert{box.min.x, box.max.y, box.min.z};
+    const auto e = Vert { box.min.x, box.min.y, box.min.z };
+    const auto f = Vert { box.max.x, box.min.y, box.min.z };
+    const auto g = Vert { box.max.x, box.max.y, box.min.z };
+    const auto h = Vert { box.min.x, box.max.y, box.min.z };
 
-    return {
-        Edge{a, b},
-        Edge{b, c},
-        Edge{c, d},
-        Edge{d, a},
+    return { Edge { a, b },
+        Edge { b, c },
+        Edge { c, d },
+        Edge { d, a },
 
-        Edge{e, f},
-        Edge{f, g},
-        Edge{g, h},
-        Edge{h, e},
+        Edge { e, f },
+        Edge { f, g },
+        Edge { g, h },
+        Edge { h, e },
 
-        Edge{a, e},
-        Edge{b, f},
-        Edge{c, g},
-        Edge{d, h}};
+        Edge { a, e },
+        Edge { b, f },
+        Edge { c, g },
+        Edge { d, h } };
 }
 
 template <typename T>
-std::array<std::array<glm::vec<3, T>, 4>, 6> quads(const radix::geometry::Aabb<3, T> &box) {
+std::array<std::array<glm::vec<3, T>, 4>, 6> quads(const radix::geometry::Aabb<3, T>& box)
+{
     using Vert = glm::vec<3, T>;
     using Face = std::array<Vert, 4>;
 
     // counter clockwise top face
-    const auto a = Vert{box.min.x, box.min.y, box.max.z};
-    const auto b = Vert{box.max.x, box.min.y, box.max.z};
-    const auto c = Vert{box.max.x, box.max.y, box.max.z};
-    const auto d = Vert{box.min.x, box.max.y, box.max.z};
+    const auto a = Vert { box.min.x, box.min.y, box.max.z };
+    const auto b = Vert { box.max.x, box.min.y, box.max.z };
+    const auto c = Vert { box.max.x, box.max.y, box.max.z };
+    const auto d = Vert { box.min.x, box.max.y, box.max.z };
     // counter clockwise bottom face, normal points up
-    const auto e = Vert{box.min.x, box.min.y, box.min.z};
-    const auto f = Vert{box.max.x, box.min.y, box.min.z};
-    const auto g = Vert{box.max.x, box.max.y, box.min.z};
-    const auto h = Vert{box.min.x, box.max.y, box.min.z};
+    const auto e = Vert { box.min.x, box.min.y, box.min.z };
+    const auto f = Vert { box.max.x, box.min.y, box.min.z };
+    const auto g = Vert { box.max.x, box.max.y, box.min.z };
+    const auto h = Vert { box.min.x, box.max.y, box.min.z };
 
-    return {
-        // Top face (+z)
-        Face{a, b, c, d},
+    return { // Top face (+z)
+        Face { a, b, c, d },
         // Bottom face (-z)
-        Face{e, h, g, f},
+        Face { e, h, g, f },
         // Front face (+y)
-        Face{d, c, g, h},
+        Face { d, c, g, h },
         // Back face (-y)
-        Face{a, e, f, b},
+        Face { a, e, f, b },
         // Right face (+x)
-        Face{b, c, g, f},
+        Face { b, c, g, f },
         // Left face (-x)
-        Face{a, e, h, d}};
+        Face { a, e, h, d }
+    };
 }
 
 template <glm::length_t n_dims, typename T>
-radix::geometry::Aabb<n_dims, T> find_bounds(const std::span<const glm::vec<n_dims, T>> points) {
+radix::geometry::Aabb<n_dims, T> find_bounds(const std::span<const glm::vec<n_dims, T>> points)
+{
     radix::geometry::Aabb<n_dims, T> bounds;
-    for (const auto &point : points) {
+    for (const auto& point : points) {
         bounds.expand_by(point);
     }
     return bounds;
