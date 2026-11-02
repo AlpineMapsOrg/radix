@@ -23,13 +23,17 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <expected>
 #include <functional>
 #include <limits>
+#include <memory>
+#include <new>
 #include <span>
 #include <type_traits>
 #include <utility>
@@ -43,6 +47,52 @@ enum class RasterError {
     IncompatibleDimensions,
     InvalidMipmapDimensions,
 };
+
+/// Tag for Raster(size, uninitialised): elements are default-initialised, i.e. indeterminate for trivial pixel types.
+struct Uninitialised { };
+inline constexpr Uninitialised uninitialised {};
+
+namespace detail {
+    /// Makes DefaultInitAllocator value-initialise.
+    struct ValueInitialise { };
+
+    /// Default-initialises instead of value-initialising, so that resizing a vector of trivial elements does not write them.
+    template <typename T>
+    struct DefaultInitAllocator : std::allocator<T> {
+        template <typename U>
+        struct rebind {
+            using other = DefaultInitAllocator<U>;
+        };
+
+        using std::allocator<T>::allocator;
+
+        template <typename U>
+        void construct(U* p) noexcept(std::is_nothrow_default_constructible_v<U>)
+        {
+            ::new (static_cast<void*>(p)) U;
+        }
+
+        template <typename U>
+        void construct(U* p, ValueInitialise) noexcept(std::is_nothrow_default_constructible_v<U>)
+        {
+            ::new (static_cast<void*>(p)) U();
+        }
+
+        template <typename U, typename... Args>
+        void construct(U* p, Args&&... args)
+        {
+            std::construct_at(p, std::forward<Args>(args)...);
+        }
+    };
+
+    /// All-zero bytes are the value-initialised state of arithmetic types (+0.0 in IEEE 754) and of glm vectors and std::arrays of them.
+    template <typename T>
+    inline constexpr bool zero_bytes_are_value_initialised = std::is_arithmetic_v<T>;
+    template <glm::length_t L, typename T, glm::qualifier Q>
+    inline constexpr bool zero_bytes_are_value_initialised<glm::vec<L, T, Q>> = zero_bytes_are_value_initialised<T>;
+    template <typename T, std::size_t N>
+    inline constexpr bool zero_bytes_are_value_initialised<std::array<T, N>> = zero_bytes_are_value_initialised<T>;
+} // namespace detail
 
 template <typename T>
 class Raster;
@@ -61,12 +111,26 @@ public:
     {
     }
 
-    Raster(const unsigned square_side_length, std::vector<T>&& data)
-        : Raster(glm::uvec2(square_side_length), std::move(data))
+    explicit Raster(const glm::uvec2 size)
     {
+        const auto count = checked_element_count(size);
+        if (!count.has_value()) {
+            assert(false && "Raster dimensions exceed the backing vector's capacity");
+            return;
+        }
+        m_size = size;
+        if constexpr (detail::zero_bytes_are_value_initialised<T>) {
+            m_data.resize(*count);
+            if (*count != 0) std::memset(m_data.data(), 0, *count * sizeof(T));
+        } else {
+            // Value-initialises in place, like std::vector<T>(count), so T needs no assignment.
+            m_data.reserve(*count);
+            for (std::size_t i = 0; i < *count; ++i)
+                m_data.emplace_back(detail::ValueInitialise {});
+        }
     }
 
-    explicit Raster(const glm::uvec2 size)
+    Raster(const glm::uvec2 size, Uninitialised)
     {
         const auto count = checked_element_count(size);
         if (!count.has_value()) {
@@ -86,17 +150,6 @@ public:
         }
         m_size = size;
         m_data.assign(*count, fill_value);
-    }
-
-    Raster(const glm::uvec2 size, std::vector<T>&& data)
-    {
-        const auto count = checked_element_count(size);
-        if (!count.has_value() || *count != data.size()) {
-            assert(false && "Raster dimensions do not match the supplied vector");
-            return;
-        }
-        m_size = size;
-        m_data = std::move(data);
     }
 
     [[nodiscard]] std::span<const T> buffer() const noexcept { return m_data; }
@@ -148,7 +201,7 @@ private:
         if (size.x != 0 && static_cast<std::size_t>(size.y) > max_size / size.x) return std::unexpected(RasterError::IncompatibleDimensions);
 
         const auto count = static_cast<std::size_t>(size.x) * size.y;
-        if (count > std::vector<T>().max_size()) return std::unexpected(RasterError::IncompatibleDimensions);
+        if (count > Storage().max_size()) return std::unexpected(RasterError::IncompatibleDimensions);
         return count;
     }
 
@@ -160,8 +213,10 @@ private:
         return dummy;
     }
 
+    using Storage = std::vector<T, detail::DefaultInitAllocator<T>>;
+
     glm::uvec2 m_size { 0, 0 };
-    std::vector<T> m_data;
+    Storage m_data;
 };
 
 // std::vector<bool> does not provide contiguous storage and therefore cannot

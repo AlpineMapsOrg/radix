@@ -18,28 +18,28 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <initializer_list>
 #include <limits>
+#include <memory>
 #include <numeric>
 #include <ranges>
 #include <span>
 #include <type_traits>
-#include <vector>
 
 #include <glm/glm.hpp>
 
 #include <radix/raster.h>
 
 namespace {
-struct MoveOnlyPixel {
-    MoveOnlyPixel() = default;
-    MoveOnlyPixel(const MoveOnlyPixel&) = delete;
-    MoveOnlyPixel(MoveOnlyPixel&&) = default;
-    MoveOnlyPixel& operator=(const MoveOnlyPixel&) = delete;
-    MoveOnlyPixel& operator=(MoveOnlyPixel&&) = default;
-};
+radix::Raster<int> make_raster(const glm::uvec2 size, const std::initializer_list<int> values)
+{
+    radix::Raster<int> raster(size, radix::uninitialised);
+    std::copy(values.begin(), values.end(), raster.begin());
+    return raster;
+}
 } // namespace
 
-TEST_CASE("radix raster empty, square, fill, and move interface")
+TEST_CASE("radix raster empty, square, and fill interface")
 {
     const radix::Raster<std::uint16_t> empty;
     CHECK(empty.buffer().empty());
@@ -50,10 +50,58 @@ TEST_CASE("radix raster empty, square, fill, and move interface")
     square.fill(17);
     CHECK(square.size() == glm::uvec2(4));
     CHECK(std::ranges::all_of(square, [](const int value) { return value == 17; }));
+}
 
-    std::vector<MoveOnlyPixel> pixels(4);
-    radix::Raster<MoveOnlyPixel> moved(2, std::move(pixels));
-    CHECK(moved.size() == glm::uvec2(2));
+TEST_CASE("radix raster allocates uninitialised storage")
+{
+    const radix::Raster<glm::u8vec3> raster({ 3, 2 }, radix::uninitialised);
+    CHECK(raster.size() == glm::uvec2(3, 2));
+    CHECK(raster.buffer_length() == 6);
+    CHECK(raster.size_in_bytes() == 6 * sizeof(glm::u8vec3));
+}
+
+TEST_CASE("radix raster value-initialises sized storage")
+{
+    static_assert(radix::detail::zero_bytes_are_value_initialised<glm::u8vec3>);
+    const radix::Raster<glm::u8vec3> colours({ 5, 3 });
+    CHECK(std::ranges::all_of(colours, [](const glm::u8vec3 value) { return value == glm::u8vec3(0); }));
+
+    const radix::Raster<float> heights({ 4, 4 });
+    CHECK(std::ranges::all_of(heights, [](const float value) { return value == 0.0f; }));
+
+    using Block = std::array<std::uint8_t, 8>;
+    static_assert(radix::detail::zero_bytes_are_value_initialised<Block>);
+    const radix::Raster<Block> blocks({ 2, 2 });
+    CHECK(std::ranges::all_of(blocks, [](const Block& block) { return block == Block {}; }));
+
+    // Move-only: takes the in-place fallback.
+    struct OwningPixel {
+        int value;
+        std::unique_ptr<int> owner;
+    };
+    static_assert(!std::is_copy_constructible_v<OwningPixel>);
+    const radix::Raster<OwningPixel> owning({ 3, 3 });
+    CHECK(owning.buffer_length() == 9);
+    CHECK(std::ranges::all_of(owning, [](const OwningPixel& pixel) { return pixel.value == 0 && pixel.owner == nullptr; }));
+
+    // Trivial, but all-zero bytes are not a null data member pointer on the Itanium C++ ABI.
+    struct Member {
+        int value;
+    };
+    struct MemberPointerPixel {
+        int Member::* member;
+    };
+    static_assert(std::is_trivially_default_constructible_v<MemberPointerPixel> && std::is_trivially_copyable_v<MemberPointerPixel>);
+    const radix::Raster<MemberPointerPixel> member_pointers({ 2, 2 });
+    CHECK(std::ranges::all_of(member_pointers, [](const MemberPointerPixel& pixel) { return pixel.member == nullptr; }));
+
+    // Not assignable: needs construction in place.
+    struct ConstantPixel {
+        const int value = 7;
+    };
+    static_assert(!std::is_copy_assignable_v<ConstantPixel>);
+    const radix::Raster<ConstantPixel> constants({ 3, 2 });
+    CHECK(std::ranges::all_of(constants, [](const ConstantPixel& pixel) { return pixel.value == 7; }));
 }
 
 TEST_CASE("radix raster stores rectangular row-major data")
@@ -81,16 +129,6 @@ TEST_CASE("radix raster exposes bounded element and byte spans")
     CHECK(raster.pixel({ 0, 2 }) == 42);
     CHECK(raster.bytes().size() == raster.buffer_length() * sizeof(std::uint16_t));
     CHECK(raster.size_in_bytes() == raster.bytes().size());
-}
-
-TEST_CASE("radix raster adopts a correctly sized vector")
-{
-    std::vector<int> data { 1, 2, 3, 4, 5, 6 };
-    const auto* original_data = data.data();
-    radix::Raster<int> raster({ 3, 2 }, std::move(data));
-
-    CHECK(raster.data() == original_data);
-    CHECK(raster.pixel({ 2, 1 }) == 6);
 }
 
 TEST_CASE("radix raster resizes by cropping and padding")
@@ -150,9 +188,9 @@ TEST_CASE("radix raster concatenation reports incompatible dimensions")
 TEST_CASE("radix raster vertically concatenates a range")
 {
     const std::array rasters {
-        radix::Raster<int>({ 2, 1 }, std::vector { 1, 2 }),
-        radix::Raster<int>({ 2, 2 }, std::vector { 3, 4, 5, 6 }),
-        radix::Raster<int>({ 2, 1 }, std::vector { 7, 8 }),
+        make_raster({ 2, 1 }, { 1, 2 }),
+        make_raster({ 2, 2 }, { 3, 4, 5, 6 }),
+        make_raster({ 2, 1 }, { 7, 8 }),
     };
 
     const auto result = radix::raster::concatenate_vertically(std::span<const radix::Raster<int>>(rasters));
